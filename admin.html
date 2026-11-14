@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>খান সুপার শপ - এডমিন প্যানেল</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .top-header { background-color: #28a745; color: white; text-align: center; padding: 15px; font-size: 24px; font-weight: bold; }
+        .login-container { max-width: 380px; margin: 60px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        .login-container h2 { margin-bottom: 20px; color: #333; }
+        .login-container input { width: 92%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
+        .login-container button { width: 98%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .login-container button:hover { background-color: #218838; }
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; float: right; margin: 10px 20px; }
+        .main-wrapper { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1300px; margin: auto; clear: both; }
+        .form-container { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); height: fit-content; }
+        .form-container input, .form-container textarea { width: 95%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 5px; }
+        .form-container button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .orders-container { flex: 1.8; min-width: 350px; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">খান সুপার শপ - এডমিন প্যানেল</div>
+
+    <!-- ১. লগইন বক্স -->
+    <div id="login-box" class="login-container">
+        <h2>অ্যাডমিন লগইন</h2>
+        <input type="email" id="admin-email" placeholder="আপনার ইমেইল দিন" required>
+        <input type="password" id="admin-password" placeholder="পাসওয়ার্ড দিন" required>
+        <button id="login-btn" onclick="adminLogin()">লগইন করুন</button>
+        <p id="login-error" style="color: red; margin-top: 12px; font-size: 14px;"></p>
+    </div>
+
+    <!-- ২. মূল অ্যাডমিন প্যানেল -->
+    <div id="admin-panel" style="display: none;">
+        <button class="logout-btn" onclick="adminLogout()">লগআউট</button>
+
+        <div class="main-wrapper">
+            <!-- বাম পাশে পণ্য যোগ করার ফর্ম -->
+            <div class="form-container">
+                <h2 style="margin-top: 0; color: #333; border-bottom: 2px solid #28a745; padding-bottom: 10px;">নতুন পণ্য যোগ করুন</h2>
+                <form id="productForm">
+                    <label>পণ্যের নাম *</label>
+                    <input type="text" id="title" placeholder="যেমন: আলু ১ কেজি" required>
+
+                    <label>মূল্য (৳) *</label>
+                    <input type="number" id="price" placeholder="যেমন: ১৫০" required>
+
+                    <label>পণ্যের বিবরণ (ঐচ্ছিক)</label>
+                    <textarea id="description" rows="3" placeholder="পণ্যটি সম্পর্কে কিছু লিখুন"></textarea>
+
+                    <label>পণ্যের ছবির লিংক (URL)</label>
+                    <input type="url" id="imageUrl" placeholder="https://example.com">
+
+                    <button type="submit">ডাটাবেজে লোড করুন</button>
+                </form>
+            </div>
+
+            <!-- ডান পাশে গ্রাহকদের অর্ডার টেবিল -->
+            <div class="orders-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
+                    <h2 style="margin: 0; color: #333;">গ্রাহকদের অর্ডারসমূহ</h2>
+                   <div style="display: flex; gap: 15px; margin: 15px 0;">
+                    <div style="flex: 1; background: #28a745; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <div style="font-size: 14px; opacity: 0.9;">আজকের মোট বিক্রি</div>
+                    <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="today-sales">0</span></div>
+                 </div>
+            <div style="flex: 1; background: #007bff; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="font-size: 14px; opacity: 0.9;">এই মাসের মোট বিক্রি</div>
+        <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="month-sales">0</span></div>
+    </div>
+</div>
+
+
+                    <div>
+                        <button type="button" onclick="loadOrders()" style="background-color: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 রিফ্রেশ</button>
+                        <button type="button" onclick="exportOrdersToCSV()" style="background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px;">📥 এক্সপোর্ট (Excel)</button>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table id="orders-table" style="width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; font-size: 14px;">
+                        <thead>
+                            <tr style="background-color: #28a745; color: white;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">নাম</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">মোবাইল</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">ঠিকানা</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">পণ্যসমূহ</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">মোট বিল</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody">
+                            <tr>
+                                <td colspan="6" style="padding: 15px; text-align: center; color: #666;">অর্ডার লোড হচ্ছে...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- জাভাস্ক্রিপ্ট কোড -->
+    <script>
+       // ১. সুপাবেস কানেকশন সেটআপ
+  const SUPABASE_URL = 'https://kuecacvhadqzywvkmauo.supabase.co'; 
+  const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI'; 
+
+  const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let globalOrdersData = [];
+
+        // ২. সেশন চেক করা
+        async function checkUserSession() {
+            const { data: { session } } = await sbClient.auth.getSession();
+            if (session) {
+                document.getElementById('login-box').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadOrders();
+                if (typeof calculateSales === 'function') calculateSales();
+            } else {
+                document.getElementById('login-box').style.display = 'block';
+                document.getElementById('admin-panel').style.display = 'none';
+            }
+        }
+
+        // ৩. অ্যাডমিন লগইন
+        async function adminLogin() {
+            const email = document.getElementById('admin-email').value.trim();
+            const password = document.getElementById('admin-password').value;
+            const errorMsg = document.getElementById('login-error');
+            const loginBtn = document.getElementById('login-btn');
+
+            if (!email || !password) {
+                errorMsg.innerText = "অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড দিন।";
+                return;
+            }
+
+            errorMsg.style.color = "blue";
+            errorMsg.innerText = "যাচাই করা হচ্ছে...";
+            loginBtn.disabled = true;
+
+            const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+            loginBtn.disabled = false;
+
+            if (error) {
+                errorMsg.style.color = "red";
+                errorMsg.innerText = "ভুল ইমেইল বা পাসওয়ার্ড! আবার চেষ্টা করুন।";
+            } else {
+                errorMsg.innerText = "";
+                checkUserSession();
+            }
+        }
+
+        // ৪. অ্যাডমিন লগআউট
+        async function adminLogout() {
+            await sbClient.auth.signOut();
+            checkUserSession();
+        }
+
+        // ৫. নতুন পণ্য যোগ করা
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const title = document.getElementById('title').value;
+            const price = parseFloat(document.getElementById('price').value); 
+            const description = document.getElementById('description').value.trim() || null;
+            const image_url = document.getElementById('imageUrl').value.trim() || null;
+
+            const submitBtn = e.target.querySelector('button');
+            submitBtn.innerText = 'সেভ হচ্ছে...';
+            submitBtn.disabled = true;
+
+            const { error } = await sbClient.from('products').insert([{ title, price, description, image_url }]);
+
+            submitBtn.innerText = 'ডাটাবেজে লোড করুন';
+            submitBtn.disabled = false;
+
+            if (error) {
+                alert('পণ্য যোগ করতে সমস্যা হয়েছে: ' + error.message);
+            } else {
+                alert('পণ্যটি সফলভাবে ডাটাবেজে যোগ করা হয়েছে! 🎉');
+                document.getElementById('productForm').reset();
+            }
+        });
+
+        // ৬. অর্ডার লোড করা
+        async function loadOrders() {
+            const tbody = document.getElementById('orders-tbody');
+            try {
+                const { data: orders, error } = await  sbClient
+                    .from('orders')
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+                globalOrdersData = orders || [];
+                calculateSales();
+
+
+                if (globalOrdersData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 15px; text-align: center; color: #999;">বর্তমানে কোনো অর্ডার নেই।</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                globalOrdersData.forEach((order, index) => {
+                    let itemsHtml = '';
+                    if (Array.isArray(order.items)) {
+                        itemsHtml = order.items.map(item => `${item.title} (${item.quantity}টি)`).join('<br>');
+                    } else {
+                        itemsHtml = '(কোনো পণ্যের তথ্য নেই)';
+                    }
+
+                    const row = `
+                        <tr style="border-bottom: 1px solid #ddd; background-color: #fff;">
+                            <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${order.customer_name}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">${order.phone_number}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; color: #555;">${order.delivery_address}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; color: #28a745; font-weight: 500;">${itemsHtml}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: right; color: #d9534f;">৳${order.total_amount}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                                <button type="button" onclick="printOrderByIndex(${index})" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-bottom: 4px;">🖨️ প্রিন্ট</button>
+                                <button type="button" onclick="deleteOrder('${order.id}')" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✓ সম্পন্ন</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 15px; text-align: center; color: red;">অর্ডার লোড করা যায়নি: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ৭. অর্ডার ডিলিট না করে নিরাপদভাবে 'Delivered' স্ট্যাটাস আপডেট করা
+        async function deleteOrder(orderId) {
+            if (!confirm("আপনি কি নিশ্চিত যে এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে? (এটি হিসাব থেকে মুছবে না)")) return;
+
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: 'Delivered' })
+                .eq('id', orderId);
+
+            if (error) {
+                alert('সমস্যা হয়েছে: ' + error.message);
+            } else {
+                alert('অর্ডারটি ডেলিভারড হিসেবে সংরক্ষিত হয়েছে! ✅');
+                loadOrders();
+                if (typeof calculateSales === 'function') calculateSales();
+            }
+        }
+
+        // ৮. প্রতিটি পণ্যের আলাদা দামসহ মেমো প্রিন্ট
+        function printOrderByIndex(index) {
+            const order = globalOrdersData[index];
+            if (!order) return;
+
+            const printWindow = window.open('', '_blank', 'width=700,height=700');
+            let tableRowsHtml = '';
+
+            if (Array.isArray(order.items)) {
+                order.items.forEach((item, idx) => {
+                    const itemPrice = item.price ? (item.price * item.quantity) : '-';
+                    tableRowsHtml += `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 10px; text-align: center;">${idx + 1}</td>
+                            <td style="padding: 10px; text-align: left;">${item.title} (${item.quantity}টি)</td>
+                            <td style="padding: 10px; text-align: right; font-weight: bold;">${itemPrice} টাকা</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const invoiceHtml = `
+                <html>
+                <head>
+                    <title>খান সুপার শপ - ক্যাশ মেমো</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 30px; color: #333; }
+                        .invoice-box { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
+                        .header { text-align: center; border-bottom: 3px double #28a745; padding-bottom: 15px; margin-bottom: 20px; }
+                        .shop-title { color: #28a745; margin: 0; font-size: 28px; }
+                        .customer-info { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; }
+                        .item-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        .item-table th { background-color: #28a745; color: white; padding: 10px; }
+                        .total-row { font-size: 18px; font-weight: bold; color: #d9534f; background: #fff5f5; }
+                    </style>
+                </head>
+                <body>
+                    <div class="invoice-box">
+                        <div class="header">
+                            <h1 class="shop-title">খান সুপার শপ</h1>
+                            <p style="margin: 5px 0; color: #666;">কাস্টমার ডেলিভারি ক্যাশ মেমো</p>
+                        </div>
+                        <div class="customer-info">
+                            <p><strong>গ্রাহকের নাম:</strong> ${order.customer_name}</p>
+                            <p><strong>মোবাইল নাম্বার:</strong> ${order.phone_number}</p>
+                            <p><strong>ডেলিভারি ঠিকানা:</strong> ${order.delivery_address}</p>
+                        </div>
+                        <table class="item-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%; text-align: center;">ক্র.নং</th>
+                                    <th style="width: 55%; text-align: left;">পণ্যের বিবরণ ও পরিমাণ</th>
+                                    <th style="width: 30%; text-align: right;">মূল্য (৳)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRowsHtml}
+                                <tr class="total-row">
+                                    <td colspan="2" style="padding: 12px; text-align: right; border-top: 2px solid #28a745;">সর্বমোট বিল:</td>
+                                    <td style="padding: 12px; text-align: right; border-top: 2px solid #28a745;">${order.total_amount} টাকা</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="text-align: center; margin-top: 30px; font-size: 13px; color: #777;">
+                            <p>খান সুপার শপ থেকে কেনাকাটা করার জন্য ধন্যবাদ!</p>
+                        </div>
+                    </div>
+                    <script>window.onload = function() { window.print(); }<\/script>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(invoiceHtml);
+            printWindow.document.close();
+        }
+
+        // ৯. অর্ডারগুলো এক্সেল (CSV) ফাইল হিসেবে ডাউনলোড করা
+        function exportOrdersToCSV() {
+            if (!globalOrdersData || globalOrdersData.length === 0) {
+                alert("এক্সপোর্ট করার মতো কোনো অর্ডার বর্তমানে নেই!");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "অর্ডার আইডি,তারিখ ও সময়,গ্রাহকের নাম,মোবাইল নাম্বার,ডেলিভারি ঠিকানা,অর্ডারকৃত পণ্যসমূহ,মোট বিল (টাকা),অবস্থা (Status)\n";
+
+            globalOrdersData.forEach(order => {
+                let itemsText = '';
+                if (Array.isArray(order.items)) {
+                    itemsText = order.items.map(item => `${item.title} (${item.quantity}টি)`).join(' | ');
+                }
+                
+                const cleanName = `"${String(order.customer_name || '').replace(/"/g, '""')}"`;
+                const cleanPhone = `"${String(order.phone_number || '').replace(/"/g, '""')}"`;
+                const cleanAddress = `"${String(order.delivery_address || '').replace(/"/g, '""')}"`;
+                const cleanItems = `"${String(itemsText).replace(/"/g, '""')}"`;
+                const orderDate = order.created_at ? `"${new Date(order.created_at).toLocaleString('bn-BD')}"` : '""';
+                const statusText = `"${String(order.status || 'Pending')}"`;
+
+                csvContent += `${order.id},${orderDate},${cleanName},${cleanPhone},${cleanAddress},${cleanItems},${order.total_amount || 0},${statusText}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            const today = new Date().toISOString().slice(0, 10);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Khan_Super_Shop_Orders_${today}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        // ১০. আজকের এবং এই মাসের মোট বিক্রি হিসাব করার ফাংশন
+        function calculateSales() {
+            let todayTotal = 0;
+            let monthTotal = 0;
+            
+            const now = new Date();
+            const todayDate = now.toDateString();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            globalOrdersData.forEach(order => {
+                const amount = parseFloat(order.total_amount) || 0;
+                if (order.created_at) {
+                    const orderDate = new Date(order.created_at);
+                    if (orderDate.toDateString() === todayDate) {
+                        todayTotal += amount;
+                    }
+                    if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+                        monthTotal += amount;
+                    }
+                }
+            });
+
+            const todayEl = document.getElementById('today-sales');
+            const monthEl = document.getElementById('month-sales');
+            if (todayEl) todayEl.innerText = todayTotal;
+            if (monthEl) monthEl.innerText = monthTotal;
+        }
+
+        checkUserSession();
+    </script>
+<script src="status.js"></script>
+</body>
+</html>
