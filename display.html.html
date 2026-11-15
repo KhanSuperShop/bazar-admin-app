@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>খান সুপার শপ - DAILY MARKET PRICE</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .top-bar {
+            width: 100%;
+            background: linear-gradient(90deg, #0a1f0a, #111, #0a1f0a);
+            border-bottom: 3px solid #28a745;
+            padding: 10px 25px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shop-brand { text-align: left; }
+        .shop-name-bn {
+            color: #00ff00;
+            font-size: 2.1rem;
+            font-weight: bold;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .shop-name-en {
+            color: #ff4500;
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin: 2px 0 0 0;
+            letter-spacing: 2px;
+        }
+        .right-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .clock-box {
+            text-align: right;
+            background: #141414;
+            padding: 6px 15px;
+            border-radius: 10px;
+            border: 2px solid #ffcc00;
+        }
+        .live-time {
+            color: #ffcc00;
+            font-size: 1.65rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .live-date {
+            color: #ddd;
+            font-size: 0.9rem;
+            margin: 2px 0 0 0;
+        }
+        .settings-gear-btn {
+            background: #222;
+            color: #ffcc00;
+            border: 2px solid #555;
+            font-size: 1.5rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-gear-btn:hover {
+            border-color: #ffcc00;
+            background: #333;
+        }
+        .controls-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .audio-btn {
+            padding: 9px 18px;
+            font-size: 1rem;
+            background-color: #ff4500;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            box-shadow: 0 0 12px rgba(255, 69, 0, 0.5);
+        }
+        .music-btn {
+            padding: 9px 15px;
+            font-size: 0.95rem;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        /* ধামাকা অফার ব্যানার */
+        .promo-banner {
+            width: 92%;
+            max-width: 1120px;
+            background: linear-gradient(90deg, #b30000, #ff4500, #b30000);
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 2px solid #ffcc00;
+            font-size: 1.6rem;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+            animation: pulseGlow 2.5s infinite alternate;
+        }
+        .promo-highlight {
+            background-color: #ffcc00;
+            color: #000;
+            padding: 2px 10px;
+            border-radius: 6px;
+            margin: 0 5px;
+        }
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 10px rgba(255, 204, 0, 0.3); transform: scale(0.995); }
+            to { box-shadow: 0 0 25px rgba(255, 204, 0, 0.8); transform: scale(1.005); }
+        }
+        /* মাঝখানের সিঙ্কড ডিসপ্লে কার্ড */
+        .spotlight-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 35px;
+            background: radial-gradient(circle at center, #1a1a1a, #0d0d0d);
+            border: 4px solid #ff4500;
+            border-radius: 20px;
+            padding: 22px 45px;
+            width: 82%;
+            max-width: 980px;
+            min-height: 210px;
+            box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
+        }
+        .spotlight-img {
+            width: 195px;
+            height: 195px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 3px solid #ffcc00;
+            background-color: #fff;
+        }
+        .spotlight-info { text-align: left; }
+        .spotlight-title {
+            color: #00ff00;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            line-height: 1.2;
+        }
+        .spotlight-price {
+            color: #ffcc00;
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        /* বিজ্ঞাপন ভিডিও/অডিও বক্স */
+        #ad-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #111;
+            border: 4px solid #ffcc00;
+            border-radius: 20px;
+            padding: 15px;
+            width: 82%;
+            max-width: 980px;
+        }
+        #ad-video {
+            max-height: 240px;
+            max-width: 100%;
+            border-radius: 12px;
+        }
+        /* নিচের চলমান বাজার দর */
+        .marquee-box {
+            width: 100%;
+            background-color: #0a0a0a;
+            color: #00ff00;
+            font-size: 1.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+            padding: 10px 0;
+            border-top: 2px solid #ff4500;
+        }
+        .item-separator {
+            color: #ffcc00;
+            margin: 0 30px;
+        }
+        #error-msg {
+            color: red;
+            text-align: center;
+            font-size: 0.95rem;
+            margin-top: 3px;
+        }
+        /* সেটিংস মডাল */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: #1a1a1a;
+            border: 3px solid #28a745;
+            border-radius: 15px;
+            padding: 22px 28px;
+            width: 90%;
+            max-width: 520px;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(40,167,69,0.5);
+        }
+        .modal-box h2 {
+            margin-top: 0;
+            color: #00ff00;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            font-size: 1.4rem;
+        }
+        .form-group { margin-bottom: 12px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 4px; color: #ffcc00; font-weight: bold; font-size: 0.95rem; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 9px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: #000;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+        .btn-save { background: #28a745; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-close { background: #dc3545; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="shop-brand">
+            <h1 class="shop-name-bn">🛒 খান সুপার শপ</h1>
+            <p class="shop-name-en">KHAN SUPER SHOP — DAILY MARKET PRICE</p>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="controls-area">
+                <button class="audio-btn" id="main-audio-btn" onclick="startAudioEngine()">🔊 ভয়েস ও মিউজিক চালু করুন</button>
+                <button class="music-btn" id="music-toggle-btn" onclick="toggleBackgroundMusic()">🎵 স্লো মিউজিক: চালু</button>
+            </div>
+            <div id="error-msg"></div>
+        </div>
+
+        <div class="right-header">
+            <div class="clock-box">
+                <div id="live-time" class="live-time">--:--:--</div>
+                <div id="live-date" class="live-date">লোড হচ্ছে...</div>
+            </div>
+            <button class="settings-gear-btn" title="অফার ও বিজ্ঞাপন সেটিংস" onclick="openSettingsModal()">⚙️</button>
+        </div>
+    </div>
+
+    <!-- ধামাকা অফার ব্যানার -->
+    <div class="promo-banner" id="promo-banner-display">
+        🎉 ধামাকা অফার! <span class="promo-highlight">১,০০০ টাকা</span> কেনাকাটা করলে পাচ্ছেন <span class="promo-highlight">২৫% ছাড়</span> — আজই চলে আসুন খান সুপার শপে! 🛍️
+    </div>
+
+    <!-- মাঝখানের প্রোডাক্ট ডিসপ্লে -->
+    <div class="spotlight-box" id="spotlight-card">
+        <img id="spot-img" class="spotlight-img" src="" alt="" style="display: none;">
+        <div class="spotlight-info">
+            <div id="spot-title" class="spotlight-title">মূল্য তালিকা লোড হচ্ছে...</div>
+            <div id="spot-price" class="spotlight-price"></div>
+        </div>
+    </div>
+
+    <!-- নিজস্ব বিজ্ঞাপন বক্স -->
+    <div id="ad-container">
+        <div style="color: #ffcc00; font-size: 1.3rem; font-weight: bold; margin-bottom: 8px;">📢 খান সুপার শপ — বিশেষ বিজ্ঞাপন</div>
+        <video id="ad-video" controls playsinline></video>
+        <audio id="ad-audio"></audio>
+    </div>
+
+    <!-- নিচের চলমান বাজার দর -->
+    <div class="marquee-box">
+        <marquee direction="left" scrollamount="5" id="led-board">
+            আজকের বাজার দর লোড হচ্ছে...
+        </marquee>
+    </div>
+
+    <!-- সেটিংস মডাল -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-box">
+            <h2>⚙️ অফার ও নিজস্ব বিজ্ঞাপন সেটিংস</h2>
+            <div class="form-group">
+                <label>অফারের শিরোনাম (যেমন: আজ শুক্রবার বিশেষ অফার!)</label>
+                <input type="text" id="set-promo-title" value="ধামাকা অফার!">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>কেনাকাটার পরিমাণ (টাকা)</label>
+                    <input type="text" id="set-min-amount" value="1000">
+                </div>
+                <div class="form-group">
+                    <label>ছাড়ের হার (%)</label>
+                    <input type="text" id="set-discount" value="25">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>অতিরিক্ত বিশেষ ঘোষণা (ঐচ্ছিক - ভয়েসে বলবে)</label>
+                <input type="text" id="set-extra-msg" placeholder="যেমন: আজ শুক্রবার সব পণ্যে বিশেষ ছাড় চলছে">
+            </div>
+            <div class="form-group">
+                <label>ভয়েস ইঞ্জিন মোড (আসল বাংলা ভয়েসের জন্য Online Bangla TTS রাখুন)</label>
+                <select id="set-voice-mode">
+                    <option value="online_bn">🌐 আসল বাংলা ভয়েস (Google Online Bangla Voice - প্রস্তাবিত)</option>
+                    <option value="system_tts">💻 ল্যাপটপ সিস্টেম ভয়েস (Offline)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>নিজস্ব বিজ্ঞাপন ফাইল সিলেক্ট করুন (MP4 ভিডিও বা MP3 অডিও)</label>
+                <input type="file" id="set-ad-file" accept="video/mp4,audio/mp3,audio/wav,audio/*,video/*" onchange="handleAdFileSelect(event)">
+                <small style="color: #aaa;">* ফাইল সিলেক্ট করলে প্রতি ৫টি পণ্যের পর আপনার বিজ্ঞাপনটি চলবে।</small>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-close" onclick="closeSettingsModal()">বন্ধ করুন</button>
+                <button class="btn-save" onclick="saveSettings()">✅ সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Translate TTS অডিও এলিমেন্ট (আসল বাংলা ভয়েসের জন্য) -->
+    <audio id="bangla-tts-player" preload="none"></audio>
+
+    <script>
+        const SUPABASE_URL = "https://kuecacvhadqzywvkmauo.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI";
+
+        let audioActive = false;
+        let musicEnabled = true;
+        let productList = [];
+        let currentIndex = 0;
+        let autoSlideTimer = null;
+        let itemsSpokenCount = 0;
+        let customAdUrl = null;
+        let customAdType = null;
+        let currentCycleId = 0; // পুরনো অডিও বাফার আটকানোর জন্য টোকেন
+
+        let promoConfig = {
+            title: "ধামাকা অফার!",
+            minAmount: "1000",
+            discount: "25",
+            extraMsg: "",
+            voiceMode: "online_bn"
+        };
+
+        const bnToEnDigitMap = {'০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+        const enToBnDigitMap = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+
+        function toEnglishDigits(str) {
+            return String(str || "").replace(/[০-৯]/g, d => bnToEnDigitMap[d]);
+        }
+
+        function toBanglaDigits(str) {
+            return String(str || "").replace(/[0-9]/g, d => enToBnDigitMap[d]);
+        }
+
+        function loadSavedSettings() {
+            const saved = localStorage.getItem('khan_shop_promo_v3');
+            if (saved) {
+                try {
+                    promoConfig = { ...promoConfig, ...JSON.parse(saved) };
+                } catch (e) {}
+            }
+            document.getElementById('set-promo-title').value = promoConfig.title;
+            document.getElementById('set-min-amount').value = promoConfig.minAmount;
+            document.getElementById('set-discount').value = promoConfig.discount;
+            document.getElementById('set-extra-msg').value = promoConfig.extraMsg || "";
+            document.getElementById('set-voice-mode').value = promoConfig.voiceMode || "online_bn";
+            applyPromoUI();
+        }
+
+        function applyPromoUI() {
+            const bnAmount = toBanglaDigits(promoConfig.minAmount);
+            const bnDiscount = toBanglaDigits(promoConfig.discount);
+            const banner = document.getElementById('promo-banner-display');
+            let extraPart = promoConfig.extraMsg ? ` — ${promoConfig.extraMsg}` : " — আজই চলে আসুন খান সুপার শপে! 🛍️";
+            banner.innerHTML = `🎉 ${promoConfig.title} <span class="promo-highlight">${bnAmount} টাকা</span> কেনাকাটা করলে পাচ্ছেন <span class="promo-highlight">${bnDiscount}% ছাড়</span>${extraPart}`;
+            updateMarqueeText();
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        function handleAdFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            customAdUrl = URL.createObjectURL(file);
+            customAdType = file.type.startsWith('video') ? 'video' : 'audio';
+        }
+
+        function stopAllCurrentSpeech() {
+            currentCycleId++;
+            clearTimeout(autoSlideTimer);
+            window.speechSynthesis.cancel();
+            const ttsPlayer = document.getElementById('bangla-tts-player');
+            ttsPlayer.pause();
+            ttsPlayer.removeAttribute('src');
+        }
+
+        function saveSettings() {
+            promoConfig.title = document.getElementById('set-promo-title').value.trim() || "ধামাকা অফার!";
+            promoConfig.minAmount = document.getElementById('set-min-amount').value.trim() || "1000";
+            promoConfig.discount = document.getElementById('set-discount').value.trim() || "25";
+            promoConfig.extraMsg = document.getElementById('set-extra-msg').value.trim();
+            promoConfig.voiceMode = document.getElementById('set-voice-mode').value;
+
+            localStorage.setItem('khan_shop_promo_v3', JSON.stringify(promoConfig));
+            applyPromoUI();
+            closeSettingsModal();
+
+            // সেভ করার সাথে সাথেই পুরনো অডিও বন্ধ করে নতুন অফারটি পড়ে শোনাবে
+            if (audioActive) {
+                stopAllCurrentSpeech();
+                const cycle = currentCycleId;
+                const promoSentence = buildPromoBanglaSentence();
+                speakBanglaNatural(promoSentence, cycle, () => {
+                    if (cycle === currentCycleId) {
+                        announceAndShowCurrent();
+                    }
+                });
+            }
+        }
+
+        function buildPromoBanglaSentence() {
+            const bnAmount = toBanglaDigits(promoConfig.minAmount);
+            const bnDiscount = toBanglaDigits(promoConfig.discount);
+            let sentence = `${promoConfig.title} ${bnAmount} টাকার কেনাকাটা করলে পাচ্ছেন ${bnDiscount} শতাংশ ছাড়।`;
+            if (promoConfig.extraMsg) {
+                sentence += ` ${promoConfig.extraMsg}।`;
+            }
+            return sentence;
+        }
+
+        // স্লো ব্যাকগ্রাউন্ড মিউজিক (Web Audio API)
+        let audioCtx = null;
+        let musicGain = null;
+
+        function initSoftBackgroundMusic() {
+            if (audioCtx) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            musicGain = audioCtx.createGain();
+            musicGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            musicGain.connect(audioCtx.destination);
+
+            const chords = [
+                [261.63, 329.63, 392.00, 493.88],
+                [220.00, 261.63, 329.63, 392.00],
+                [174.61, 220.00, 261.63, 349.23],
+                [196.00, 246.94, 293.66, 392.00]
+            ];
+            let chordStep = 0;
+
+            function playSoftChord() {
+                if (!musicEnabled || !audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const notes = chords[chordStep % chords.length];
+                chordStep++;
+
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.25);
+
+                    noteGain.gain.setValueAtTime(0.001, now + idx * 0.25);
+                    noteGain.gain.exponentialRampToValueAtTime(0.16, now + idx * 0.25 + 0.8);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.25 + 3.8);
+
+                    osc.connect(noteGain);
+                    noteGain.connect(musicGain);
+
+                    osc.start(now + idx * 0.25);
+                    osc.stop(now + idx * 0.25 + 4.0);
+                });
+            }
+
+            playSoftChord();
+            setInterval(playSoftChord, 3800);
+        }
+
+        function setMusicVolume(level) {
+            if (!musicGain || !audioCtx) return;
+            musicGain.gain.linearRampToValueAtTime(musicEnabled ? level : 0, audioCtx.currentTime + 0.3);
+        }
+
+        function toggleBackgroundMusic() {
+            musicEnabled = !musicEnabled;
+            const mBtn = document.getElementById('music-toggle-btn');
+            if (musicEnabled) {
+                mBtn.innerText = '🎵 স্লো মিউজিক: চালু';
+                mBtn.style.backgroundColor = '#17a2b8';
+                if (!audioCtx) initSoftBackgroundMusic();
+                setMusicVolume(0.05);
+            } else {
+                mBtn.innerText = '🔇 স্লো মিউজিক: বন্ধ';
+                mBtn.style.backgroundColor = '#6c757d';
+                setMusicVolume(0);
+            }
+        }
+
+        // আসল বাংলা ভয়েস প্লেয়ার (Google Translate Bangla TTS + Offline Fallback)
+        function speakBanglaNatural(banglaText, cycleId, onComplete) {
+            if (cycleId !== currentCycleId) return;
+            setMusicVolume(0.015);
+
+            const finish = () => {
+                if (cycleId !== currentCycleId) return;
+                setMusicVolume(0.05);
+                if (onComplete) onComplete();
+            };
+
+            if (promoConfig.voiceMode === "online_bn") {
+                // Google Translate বাংলা TTS সরাসরি আসল বাঙালি উচ্চারণে পড়ে শোনাবে
+                const chunks = splitBanglaChunks(banglaText, 160);
+                let chunkIdx = 0;
+
+                function playNextChunk() {
+                    if (cycleId !== currentCycleId) return;
+                    if (chunkIdx >= chunks.length) {
+                        finish();
+                        return;
+                    }
+                    const part = chunks[chunkIdx++];
+                    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(part)}&tl=bn&client=tw-ob`;
+                    const player = document.getElementById('bangla-tts-player');
+                    player.src = ttsUrl;
+                    player.playbackRate = 0.95;
+
+                    player.onended = playNextChunk;
+                    player.onerror = () => {
+                        // ইন্টারনেট না থাকলে বা ব্লক হলে সিস্টেম ভয়েসে ফলব্যাক করবে
+                        speakWithSystemTTS(part, cycleId, playNextChunk);
+                    };
+
+                    const playPromise = player.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {
+                            speakWithSystemTTS(part, cycleId, playNextChunk);
+                        });
+                    }
+                }
+
+                playNextChunk();
+            } else {
+                speakWithSystemTTS(banglaText, cycleId, finish);
+            }
+        }
+
+        function splitBanglaChunks(text, maxLen) {
+            const parts = text.split(/(?<=[।!?])/);
+            const result = [];
+            let current = "";
+            for (let p of parts) {
+                p = p.trim();
+                if (!p) continue;
+                if ((current + " " + p).length <= maxLen) {
+                    current = (current + " " + p).trim();
+                } else {
+                    if (current) result.push(current);
+                    current = p;
+                }
+            }
+            if (current) result.push(current);
+            return result.length ? result : [text];
+        }
+
+        function speakWithSystemTTS(text, cycleId, onDone) {
+            if (cycleId !== currentCycleId) return;
+            window.speechSynthesis.cancel();
+            const voices = window.speechSynthesis.getVoices();
+            const banglaVoice = voices.find(v => v.lang.includes('bn-BD') || v.lang.includes('bn-IN') || v.lang.includes('bn'));
+
+            const speech = new SpeechSynthesisUtterance(text);
+            if (banglaVoice) {
+                speech.voice = banglaVoice;
+                speech.lang = banglaVoice.lang;
+            } else {
+                speech.lang = 'bn-BD';
+            }
+            speech.rate = 0.88;
+            speech.onend = onDone;
+            speech.onerror = onDone;
+            window.speechSynthesis.speak(speech);
+        }
+
+        function updateLiveClock() {
+            const now = new Date();
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            
+            document.getElementById('live-time').innerText = "🕒 " + now.toLocaleTimeString('bn-BD', timeOptions);
+            document.getElementById('live-date').innerText = now.toLocaleDateString('bn-BD', dateOptions);
+        }
+
+        function showProductOnScreen(index) {
+            if (productList.length === 0) return;
+            document.getElementById('ad-container').style.display = 'none';
+            document.getElementById('spotlight-card').style.display = 'flex';
+
+            const item = productList[index];
+            const imgEl = document.getElementById('spot-img');
+            const titleEl = document.getElementById('spot-title');
+            const priceEl = document.getElementById('spot-price');
+
+            const imgSrc = item.image_url || item.image || item.img_url || item.photo || "";
+            if (imgSrc) {
+                imgEl.src = imgSrc;
+                imgEl.style.display = 'block';
+                imgEl.onerror = () => { imgEl.style.display = 'none'; };
+            } else {
+                imgEl.style.display = 'none';
+            }
+
+            titleEl.innerText = item.title || "";
+            const cleanPrice = toEnglishDigits(item.price);
+            if (!cleanPrice || Number(cleanPrice) == 0 || item.price === "." || (item.title && item.title.length > 28)) {
+                priceEl.innerText = "";
+            } else {
+                priceEl.innerText = `দাম: ${toBanglaDigits(cleanPrice)} ৳`;
+            }
+        }
+
+        function playCustomAd(cycleId, onAdFinished) {
+            if (cycleId !== currentCycleId) return;
+            document.getElementById('spotlight-card').style.display = 'none';
+            const adBox = document.getElementById('ad-container');
+            adBox.style.display = 'flex';
+            setMusicVolume(0);
+
+            if (customAdType === 'video') {
+                const vid = document.getElementById('ad-video');
+                vid.style.display = 'block';
+                vid.src = customAdUrl;
+                vid.play();
+                vid.onended = () => {
+                    vid.style.display = 'none';
+                    setMusicVolume(0.05);
+                    if (cycleId === currentCycleId) onAdFinished();
+                };
+            } else {
+                document.getElementById('ad-video').style.display = 'none';
+                const aud = document.getElementById('ad-audio');
+                aud.src = customAdUrl;
+                aud.play();
+                aud.onended = () => {
+                    setMusicVolume(0.05);
+                    if (cycleId === currentCycleId) onAdFinished();
+                };
+            }
+        }
+
+        function startAudioEngine() {
+            if (audioActive) return;
+            audioActive = true;
+            stopAllCurrentSpeech();
+            
+            const btn = document.getElementById('main-audio-btn');
+            btn.style.backgroundColor = '#00ff00';
+            btn.style.color = '#000';
+            btn.innerText = '🔊 ভয়েস ও মিউজিক চালু আছে';
+
+            if (musicEnabled) initSoftBackgroundMusic();
+            window.speechSynthesis.getVoices();
+            announceAndShowCurrent();
+        }
+
+        function announceAndShowCurrent() {
+            if (productList.length === 0) return;
+            const cycle = currentCycleId;
+
+            if (audioActive && customAdUrl && itemsSpokenCount > 0 && itemsSpokenCount % 5 === 0) {
+                itemsSpokenCount++;
+                playCustomAd(cycle, () => {
+                    if (cycle === currentCycleId) announceAndShowCurrent();
+                });
+                return;
+            }
+
+            showProductOnScreen(currentIndex);
+
+            const currentItem = productList[currentIndex];
+            const titleText = currentItem.title || "";
+            const cleanPrice = toEnglishDigits(currentItem.price);
+            const hasPrice = !(!cleanPrice || Number(cleanPrice) == 0 || currentItem.price === "." || titleText.length > 28);
+
+            if (audioActive) {
+                itemsSpokenCount++;
+                const announcePromo = (itemsSpokenCount % 5 === 0);
+
+                // পরিষ্কার বাংলা বাক্য তৈরি করা (সব সংখ্যা বাংলা অঙ্কে যাতে TTS স্পষ্ট বাংলায় পড়ে)
+                const bnTitle = toBanglaDigits(titleText);
+                let textToSpeak = hasPrice ? `${bnTitle}, দাম ${toBanglaDigits(cleanPrice)} টাকা।` : `${bnTitle}।`;
+
+                if (announcePromo) {
+                    textToSpeak += " " + buildPromoBanglaSentence();
+                }
+
+                speakBanglaNatural(textToSpeak, cycle, () => {
+                    if (cycle === currentCycleId) {
+                        currentIndex = (currentIndex + 1) % productList.length;
+                        autoSlideTimer = setTimeout(announceAndShowCurrent, 1600);
+                    }
+                });
+            } else {
+                currentIndex = (currentIndex + 1) % productList.length;
+                autoSlideTimer = setTimeout(announceAndShowCurrent, 4000);
+            }
+        }
+
+        function updateMarqueeText() {
+            const bnAmount = toBanglaDigits(promoConfig.minAmount);
+            const bnDiscount = toBanglaDigits(promoConfig.discount);
+            let scrollText = `★ ${promoConfig.title} ${bnAmount} টাকা কেনাকাটায় ${bnDiscount}% ছাড়! ★ খান সুপার শপ — আজকের বাজার দর: `;
+            
+            if (productList.length > 0) {
+                productList.forEach(item => {
+                    const cleanPrice = toEnglishDigits(item.price);
+                    if (!cleanPrice || Number(cleanPrice) == 0 || item.price === "." || (item.title && item.title.length > 28)) {
+                        scrollText += ` <span style="color: #00ff00;">${item.title}</span> <span class="item-separator">|</span> `;
+                    } else {
+                        scrollText += ` <span style="color: #00ff00;">${item.title}</span>: <span style="color: #ffcc00;">${toBanglaDigits(cleanPrice)} ৳</span> <span class="item-separator">|</span> `;
+                    }
+                });
+            }
+            document.getElementById('led-board').innerHTML = scrollText;
+        }
+
+        async function fetchProducts() {
+            try {
+                const apiUrl = SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/products?select=*";
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 
+                        'apikey': SUPABASE_ANON_KEY, 
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY 
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errText}`);
+                }
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const isFirstLoad = productList.length === 0;
+                    productList = data;
+                    updateMarqueeText();
+                    document.getElementById('error-msg').innerText = "";
+
+                    if (isFirstLoad) {
+                        announceAndShowCurrent();
+                    }
+                } else {
+                    document.getElementById('error-msg').innerText = "ডেটাবেসে কোনো পণ্য পাওয়া যায়নি!";
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-msg').innerText = "এরর: " + err.message;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedSettings();
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
+            fetchProducts();
+            setInterval(fetchProducts, 30000); 
+            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = window.speechSynthesis.getVoices;
+            }
+        });
+    </script>
+</body>
+</html>
