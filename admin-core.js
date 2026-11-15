@@ -3,44 +3,51 @@ const SUPABASE_URL = 'https://kuecacvhadqzywvkmauo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI'; 
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let loadedOrdersMap = {};
+
 // ২. নতুন পণ্য যোগ করার ফর্ম সাবমিট হ্যান্ডলার
-document.getElementById('productForm').addEventListener('submit', async (e) => {
-    e.preventDefault(); 
+const productForm = document.getElementById('productForm');
+if (productForm) {
+    productForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
 
-    const title = document.getElementById('title').value;
-    const price = parseFloat(document.getElementById('price').value); 
-    const description = document.getElementById('description').value;
-    const image_url = document.getElementById('imageUrl').value.trim() || null;
+        const title = document.getElementById('title').value;
+        const price = parseFloat(document.getElementById('price').value); 
+        const description = document.getElementById('description').value;
+        const image_url = document.getElementById('imageUrl').value.trim() || null;
 
-    const submitBtn = e.target.querySelector('button');
-    submitBtn.innerText = 'সেভ হচ্ছে...';
-    submitBtn.disabled = true;
+        const submitBtn = e.target.querySelector('button');
+        submitBtn.innerText = 'সেভ হচ্ছে...';
+        submitBtn.disabled = true;
 
-    const { data, error } = await supabase
-        .from('products')
-        .insert([{ title, price, description, image_url }]);
+        const { data, error } = await supabase
+            .from('products')
+            .insert([{ title, price, description, image_url }]);
 
-    submitBtn.innerText = 'ডাটাবেজে লোড করুন';
-    submitBtn.disabled = false;
+        submitBtn.innerText = 'ডাটাবেজে লোড করুন';
+        submitBtn.disabled = false;
 
-    if (error) {
-        alert('পণ্য যোগ করতে সমস্যা হয়েছে: ' + error.message);
-        console.error(error);
-    } else {
-        alert('পণ্যটি সফলভাবে ডাটাবেজে যোগ করা হয়েছে! 🎉');
-        document.getElementById('productForm').reset();
-    }
-});
+        if (error) {
+            alert('পণ্য যোগ করতে সমস্যা হয়েছে: ' + error.message);
+            console.error(error);
+        } else {
+            alert('পণ্যটি সফলভাবে ডাটাবেজে যোগ করা হয়েছে! 🎉');
+            productForm.reset();
+        }
+    });
+}
 
 // ৩. সুপাবেস থেকে অর্ডারগুলো নিয়ে এসে টেবিলে দেখানোর ফাংশন
 async function loadOrders() {
     const tbody = document.getElementById('orders-tbody');
+    if (!tbody) return;
     
     try {
         const { data: orders, error } = await supabase
             .from('orders')
             .select('*')
-            .order('id', { ascending: false }); // নতুন অর্ডারগুলো সবার উপরে দেখাবে
+            .order('id', { ascending: false });
 
         if (error) throw error;
 
@@ -50,8 +57,11 @@ async function loadOrders() {
         }
 
         tbody.innerHTML = '';
+        loadedOrdersMap = {};
 
         orders.forEach(order => {
+            loadedOrdersMap[order.id] = order;
+
             let itemsText = '';
             if (Array.isArray(order.items)) {
                 itemsText = order.items.map(item => `${item.title} (${item.quantity}টি)`).join(', ');
@@ -67,7 +77,7 @@ async function loadOrders() {
                     <td style="padding: 10px; border: 1px solid #ddd; color: #28a745; font-weight: 500;">${itemsText}</td>
                     <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: right; color: #d9534f;">৳${order.total_amount}</td>
                     <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                        <button type="button" onclick="printSingleOrder('${order.customer_name}', '${order.phone_number}', '${order.delivery_address}', '${itemsText}', '${order.total_amount}')" style="background-color: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;">🖨️ প্রিন্ট</button>
+                        <button type="button" onclick="printOrderById('${order.id}')" style="background-color: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;">🖨️ প্রিন্ট</button>
                         <button type="button" onclick="deleteOrder('${order.id}')" style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">✓ সম্পন্ন</button>
                     </td>
                 </tr>
@@ -95,26 +105,58 @@ async function deleteOrder(orderId) {
         alert('অর্ডারটি মুছতে সমস্যা হয়েছে: ' + error.message);
     } else {
         alert('অর্ডারটি সম্পন্ন হিসেবে তালিকা থেকে সরানো হয়েছে! ✅');
-        loadOrders(); // টেবিল রিফ্রেশ করা
+        loadOrders();
     }
 }
 
-// ৫. মেমো প্রিন্ট করার ফাংশন
+// আইডি দিয়ে অর্ডার প্রিন্ট করার হেল্পার ফাংশন
+function printOrderById(orderId) {
+    const order = loadedOrdersMap[orderId];
+    if (!order) return;
+    printSingleOrder(order.customer_name, order.phone_number, order.delivery_address, order.items, order.total_amount);
+}
+
+// ৫. মেমো প্রিন্ট করার ফাংশন (একক দাম × পরিমাণ = মোট মূল্য সহ)
 function printSingleOrder(name, phone, address, items, total) {
     const printWindow = window.open('', '_blank', 'width=700,height=700');
     
     let tableRowsHtml = '';
-    let itemArray = items.split(', ');
     
-    itemArray.forEach((item, index) => {
-        tableRowsHtml += `
-            <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 10px; text-align: center;">${index + 1}</td>
-                <td style="padding: 10px; text-align: left;">${item}</td>
-                <td style="padding: 10px; text-align: right; font-weight: bold;">-</td>
-            </tr>
-        `;
-    });
+    if (Array.isArray(items) && items.length > 0) {
+        items.forEach((item, index) => {
+            const qty = Number(item.quantity) || 1;
+            const unitPrice = Number(item.price) || (items.length === 1 ? (Number(total) / qty) : 0);
+            const subtotal = unitPrice * qty;
+            const priceFormula = unitPrice > 0 ? `${unitPrice} × ${qty} = ${subtotal} টাকা` : `${total} টাকা`;
+
+            tableRowsHtml += `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; text-align: center;">${index + 1}</td>
+                    <td style="padding: 10px; text-align: left;">${item.title} (${qty}টি)</td>
+                    <td style="padding: 10px; text-align: right; font-weight: bold;">${priceFormula}</td>
+                </tr>
+            `;
+        });
+    } else {
+        const itemsStr = String(items || '');
+        const itemArray = itemsStr.split(', ');
+        itemArray.forEach((itemText, index) => {
+            const match = itemText.match(/\((\d+)টি\)/);
+            const qty = match ? parseInt(match[1], 10) : 1;
+            let priceDisplay = '-';
+            if (itemArray.length === 1 && Number(total) > 0) {
+                const unitPrice = Number(total) / qty;
+                priceDisplay = `${unitPrice} × ${qty} = ${total} টাকা`;
+            }
+            tableRowsHtml += `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; text-align: center;">${index + 1}</td>
+                    <td style="padding: 10px; text-align: left;">${itemText}</td>
+                    <td style="padding: 10px; text-align: right; font-weight: bold;">${priceDisplay}</td>
+                </tr>
+            `;
+        });
+    }
 
     const invoiceHtml = `
         <html>
@@ -149,8 +191,8 @@ function printSingleOrder(name, phone, address, items, total) {
                     <thead>
                         <tr>
                             <th style="width: 15%; text-align: center;">ক্র.নং</th>
-                            <th style="width: 55%; text-align: left;">পণ্যের বিবরণ ও পরিমাণ</th>
-                            <th style="width: 30%; text-align: right;">মূল্য (৳)</th>
+                            <th style="width: 50%; text-align: left;">পণ্যের বিবরণ ও পরিমাণ</th>
+                            <th style="width: 35%; text-align: right;">মূল্য (৳)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -180,5 +222,4 @@ function printSingleOrder(name, phone, address, items, total) {
     printWindow.document.close();
 }
 
-// পেজ লোড হওয়ার সাথে সাথে অর্ডারগুলো লোড করার চেষ্টা করবে
 window.addEventListener('DOMContentLoaded', loadOrders);
