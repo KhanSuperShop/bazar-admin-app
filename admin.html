@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>খান সুপার শপ - এডমিন প্যানেল</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
         .top-header { background-color: #28a745; color: white; text-align: center; padding: 15px; font-size: 24px; font-weight: bold; }
@@ -64,17 +64,16 @@
             <div class="orders-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
                     <h2 style="margin: 0; color: #333;">গ্রাহকদের অর্ডারসমূহ</h2>
-                   <div style="display: flex; gap: 15px; margin: 15px 0;">
-                    <div style="flex: 1; background: #28a745; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; opacity: 0.9;">আজকের মোট বিক্রি</div>
-                    <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="today-sales">0</span></div>
-                 </div>
-            <div style="flex: 1; background: #007bff; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="font-size: 14px; opacity: 0.9;">এই মাসের মোট বিক্রি</div>
-        <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="month-sales">0</span></div>
-    </div>
-</div>
-
+                    <div style="display: flex; gap: 15px; margin: 15px 0;">
+                        <div style="flex: 1; background: #28a745; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <div style="font-size: 14px; opacity: 0.9;">আজকের মোট বিক্রি</div>
+                            <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="today-sales">0</span></div>
+                        </div>
+                        <div style="flex: 1; background: #007bff; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <div style="font-size: 14px; opacity: 0.9;">এই মাসের মোট বিক্রি</div>
+                            <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="month-sales">0</span></div>
+                        </div>
+                    </div>
 
                     <div>
                         <button type="button" onclick="loadOrders()" style="background-color: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 রিফ্রেশ</button>
@@ -107,11 +106,11 @@
 
     <!-- জাভাস্ক্রিপ্ট কোড -->
     <script>
-       // ১. সুপাবেস কানেকশন সেটআপ
-  const SUPABASE_URL = 'https://kuecacvhadqzywvkmauo.supabase.co'; 
-  const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI'; 
+        // ১. সুপাবেস কানেকশন সেটআপ
+        const SUPABASE_URL = 'https://supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI'; 
 
-  const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let globalOrdersData = [];
 
@@ -172,234 +171,174 @@
             const image_url = document.getElementById('imageUrl').value.trim() || null;
 
             const submitBtn = e.target.querySelector('button');
-            submitBtn.innerText = 'সেভ হচ্ছে...';
-            submitBtn.disabled = true;
+submitBtn.innerText = 'সেভ হচ্ছে...';
+submitBtn.disabled = true;
+const { error } = await sbClient.from('products').insert([{ title, price, description, image_url }]);
+submitBtn.innerText = 'ডাটাবেজে লোড করুন';
+submitBtn.disabled = false;
+if (error) {
+alert('পণ্য যোগ করতে সমস্যা হয়েছে: ' + error.message);
+} else {
+alert('পণ্যটি সফলভাবে ডাটাবেজে যোগ করা হয়েছে! 🎉');
+document.getElementById('productForm').reset();
+}
+});
+// ৬. অর্ডার লোড করা
+async function loadOrders() {
+const tbody = document.getElementById('orders-tbody');
+try {
+const { data: orders, error } = await sbClient
+.from('orders')
+.select('*')
+.order('id', { ascending: false });
+if (error) throw error;
+globalOrdersData = orders || [];
+calculateSales();
+if (globalOrdersData.length === 0) {
+tbody.innerHTML = <tr><td colspan="6" style="padding: 15px; text-align: center; color: #999;">বর্তমানে কোনো অর্ডার নেই।</td></tr>;
+return;
+}
+tbody.innerHTML = '';
+globalOrdersData.forEach((order, index) => {
+let itemsHtml = '';
+if (Array.isArray(order.items)) {
+itemsHtml = order.items.map(item => ${item.title} (${item.quantity}টি)).join('
+');
+} else {
+itemsHtml = '(কোনো পণ্যের তথ্য নেই)';
+}
+const row = `
+${order.customer_name}
+${order.phone_number}${order.delivery_address}${itemsHtml}৳${order.total_amount}; tbody.innerHTML += row; }); } catch (error) { tbody.innerHTML = অর্ডার লোড করা যায়নি: ${error.message}`;
+}
+}
+// ৭. অর্ডার ডিলিট না করে নিরাপদভাবে 'Delivered' স্ট্যাটাস আপডেট করা
+async function deleteOrder(orderId) {
+if (!confirm("আপনি কি নিশ্চিত যে এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে? (এটি হিসাব থেকে মুছবে না)")) return;
+const { error } = await sbClient
+.from('orders')
+.update({ status: 'Delivered' })
+.eq('id', orderId);
+if (error) {
+alert('সমস্যা হয়েছে: ' + error.message);
+} else {
+alert('অর্ডারটি ডেলিভারড হিসেবে সংরক্ষিত হয়েছে! ✅');
+loadOrders();
+if (typeof calculateSales === 'function') calculateSales();
+}
+}
+// ৮. প্রতিটি পণ্যের আলাদা দাম ও গুণফলসহ মেমো প্রিন্ট (110 × 2 = 220 টাকা)
+function printOrderByIndex(index) {
+const order = globalOrdersData[index];
+if (!order) return;
+const printWindow = window.open('', '_blank', 'width=700,height=700');
+let tableRowsHtml = '';
+if (Array.isArray(order.items)) {
+order.items.forEach((item, idx) => {
+const qty = Number(item.quantity) || 1;
+const unitPrice = Number(item.price) || 0;
+const subTotal = unitPrice * qty;
+const priceCalculationText = unitPrice > 0
+? ${unitPrice} × ${qty} = ${subTotal} টাকা
+: '-';
+tableRowsHtml += `
+${idx + 1}
+\({item.title} (\){qty}টি)${priceCalculationText}`;
+});
+}
+const invoiceHtml = `
 
-            const { error } = await sbClient.from('products').insert([{ title, price, description, image_url }]);
 
-            submitBtn.innerText = 'ডাটাবেজে লোড করুন';
-            submitBtn.disabled = false;
+খান সুপার শপ - ক্যাশ মেমো
 
-            if (error) {
-                alert('পণ্য যোগ করতে সমস্যা হয়েছে: ' + error.message);
-            } else {
-                alert('পণ্যটি সফলভাবে ডাটাবেজে যোগ করা হয়েছে! 🎉');
-                document.getElementById('productForm').reset();
-            }
-        });
-
-        // ৬. অর্ডার লোড করা
-        async function loadOrders() {
-            const tbody = document.getElementById('orders-tbody');
-            try {
-                const { data: orders, error } = await  sbClient
-                    .from('orders')
-                    .select('*')
-                    .order('id', { ascending: false });
-
-                if (error) throw error;
-                globalOrdersData = orders || [];
-                calculateSales();
+body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 30px; color: #333; }
+.invoice-box { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
+.header { text-align: center; border-bottom: 3px double #28a745; padding-bottom: 15px; margin-bottom: 20px; }
+.shop-title { color: #28a745; margin: 0; font-size: 28px; }
+.customer-info { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; }
+.item-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.item-table th { background-color: #28a745; color: white; padding: 10px; }
+.total-row { font-size: 18px; font-weight: bold; color: #d9534f; background: #fff5f5; }
 
 
-                if (globalOrdersData.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 15px; text-align: center; color: #999;">বর্তমানে কোনো অর্ডার নেই।</td></tr>`;
-                    return;
-                }
 
-                tbody.innerHTML = '';
-                globalOrdersData.forEach((order, index) => {
-                    let itemsHtml = '';
-                    if (Array.isArray(order.items)) {
-                        itemsHtml = order.items.map(item => `${item.title} (${item.quantity}টি)`).join('<br>');
-                    } else {
-                        itemsHtml = '(কোনো পণ্যের তথ্য নেই)';
-                    }
 
-                    const row = `
-                        <tr style="border-bottom: 1px solid #ddd; background-color: #fff;">
-                            <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${order.customer_name}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${order.phone_number}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; color: #555;">${order.delivery_address}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; color: #28a745; font-weight: 500;">${itemsHtml}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: right; color: #d9534f;">৳${order.total_amount}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                                <button type="button" onclick="printOrderByIndex(${index})" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-bottom: 4px;">🖨️ প্রিন্ট</button>
-                                <button type="button" onclick="deleteOrder('${order.id}')" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">✓ সম্পন্ন</button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 15px; text-align: center; color: red;">অর্ডার লোড করা যায়নি: ${error.message}</td></tr>`;
-            }
-        }
 
-        // ৭. অর্ডার ডিলিট না করে নিরাপদভাবে 'Delivered' স্ট্যাটাস আপডেট করা
-        async function deleteOrder(orderId) {
-            if (!confirm("আপনি কি নিশ্চিত যে এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে? (এটি হিসাব থেকে মুছবে না)")) return;
+খান সুপার শপ
+কাস্টমার ডেলিভারি ক্যাশ মেমো
 
-            const { error } = await supabase
-                .from('orders')
-                .update({ status: 'Delivered' })
-                .eq('id', orderId);
 
-            if (error) {
-                alert('সমস্যা হয়েছে: ' + error.message);
-            } else {
-                alert('অর্ডারটি ডেলিভারড হিসেবে সংরক্ষিত হয়েছে! ✅');
-                loadOrders();
-                if (typeof calculateSales === 'function') calculateSales();
-            }
-        }
+গ্রাহকের নাম: ${order.customer_name}
+মোবাইল নাম্বার: ${order.phone_number}
+ডেলিভারি ঠিকানা: ${order.delivery_address}
+${tableRowsHtml}
 
-        // ৮. প্রতিটি পণ্যের আলাদা দামসহ মেমো প্রিন্ট
-        function printOrderByIndex(index) {
-            const order = globalOrdersData[index];
-            if (!order) return;
+ক্র.নং	পণ্যের বিবরণ ও পরিমাণ	মূল্য (৳)
+সর্বমোট বিল:
+	${order.total_amount} টাকা
 
-            const printWindow = window.open('', '_blank', 'width=700,height=700');
-            let tableRowsHtml = '';
+খান সুপার শপ থেকে কেনাকাটা করার জন্য ধন্যবাদ!
 
-            if (Array.isArray(order.items)) {
-                order.items.forEach((item, idx) => {
-                    const itemPrice = item.price ? (item.price * item.quantity) : '-';
-                    tableRowsHtml += `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 10px; text-align: center;">${idx + 1}</td>
-                            <td style="padding: 10px; text-align: left;">${item.title} (${item.quantity}টি)</td>
-                            <td style="padding: 10px; text-align: right; font-weight: bold;">${itemPrice} টাকা</td>
-                        </tr>
-                    `;
-                });
-            }
 
-            const invoiceHtml = `
-                <html>
-                <head>
-                    <title>খান সুপার শপ - ক্যাশ মেমো</title>
-                    <style>
-                        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 30px; color: #333; }
-                        .invoice-box { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
-                        .header { text-align: center; border-bottom: 3px double #28a745; padding-bottom: 15px; margin-bottom: 20px; }
-                        .shop-title { color: #28a745; margin: 0; font-size: 28px; }
-                        .customer-info { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; }
-                        .item-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                        .item-table th { background-color: #28a745; color: white; padding: 10px; }
-                        .total-row { font-size: 18px; font-weight: bold; color: #d9534f; background: #fff5f5; }
-                    </style>
-                </head>
-                <body>
-                    <div class="invoice-box">
-                        <div class="header">
-                            <h1 class="shop-title">খান সুপার শপ</h1>
-                            <p style="margin: 5px 0; color: #666;">কাস্টমার ডেলিভারি ক্যাশ মেমো</p>
-                        </div>
-                        <div class="customer-info">
-                            <p><strong>গ্রাহকের নাম:</strong> ${order.customer_name}</p>
-                            <p><strong>মোবাইল নাম্বার:</strong> ${order.phone_number}</p>
-                            <p><strong>ডেলিভারি ঠিকানা:</strong> ${order.delivery_address}</p>
-                        </div>
-                        <table class="item-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 15%; text-align: center;">ক্র.নং</th>
-                                    <th style="width: 55%; text-align: left;">পণ্যের বিবরণ ও পরিমাণ</th>
-                                    <th style="width: 30%; text-align: right;">মূল্য (৳)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableRowsHtml}
-                                <tr class="total-row">
-                                    <td colspan="2" style="padding: 12px; text-align: right; border-top: 2px solid #28a745;">সর্বমোট বিল:</td>
-                                    <td style="padding: 12px; text-align: right; border-top: 2px solid #28a745;">${order.total_amount} টাকা</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div style="text-align: center; margin-top: 30px; font-size: 13px; color: #777;">
-                            <p>খান সুপার শপ থেকে কেনাকাটা করার জন্য ধন্যবাদ!</p>
-                        </div>
-                    </div>
-                    <script>window.onload = function() { window.print(); }<\/script>
-                </body>
-                </html>
-            `;
 
-            printWindow.document.open();
-            printWindow.document.write(invoiceHtml);
-            printWindow.document.close();
-        }
+window.onload = function() { window.print(); };
+</script>
 
-        // ৯. অর্ডারগুলো এক্সেল (CSV) ফাইল হিসেবে ডাউনলোড করা
-        function exportOrdersToCSV() {
-            if (!globalOrdersData || globalOrdersData.length === 0) {
-                alert("এক্সপোর্ট করার মতো কোনো অর্ডার বর্তমানে নেই!");
-                return;
-            }
 
-            let csvContent = "\uFEFF"; 
-            csvContent += "অর্ডার আইডি,তারিখ ও সময়,গ্রাহকের নাম,মোবাইল নাম্বার,ডেলিভারি ঠিকানা,অর্ডারকৃত পণ্যসমূহ,মোট বিল (টাকা),অবস্থা (Status)\n";
-
-            globalOrdersData.forEach(order => {
-                let itemsText = '';
-                if (Array.isArray(order.items)) {
-                    itemsText = order.items.map(item => `${item.title} (${item.quantity}টি)`).join(' | ');
-                }
-                
-                const cleanName = `"${String(order.customer_name || '').replace(/"/g, '""')}"`;
-                const cleanPhone = `"${String(order.phone_number || '').replace(/"/g, '""')}"`;
-                const cleanAddress = `"${String(order.delivery_address || '').replace(/"/g, '""')}"`;
-                const cleanItems = `"${String(itemsText).replace(/"/g, '""')}"`;
-                const orderDate = order.created_at ? `"${new Date(order.created_at).toLocaleString('bn-BD')}"` : '""';
-                const statusText = `"${String(order.status || 'Pending')}"`;
-
-                csvContent += `${order.id},${orderDate},${cleanName},${cleanPhone},${cleanAddress},${cleanItems},${order.total_amount || 0},${statusText}\n`;
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
-            const today = new Date().toISOString().slice(0, 10);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Khan_Super_Shop_Orders_${today}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-        // ১০. আজকের এবং এই মাসের মোট বিক্রি হিসাব করার ফাংশন
-        function calculateSales() {
-            let todayTotal = 0;
-            let monthTotal = 0;
-            
-            const now = new Date();
-            const todayDate = now.toDateString();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-
-            globalOrdersData.forEach(order => {
-                const amount = parseFloat(order.total_amount) || 0;
-                if (order.created_at) {
-                    const orderDate = new Date(order.created_at);
-                    if (orderDate.toDateString() === todayDate) {
-                        todayTotal += amount;
-                    }
-                    if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
-                        monthTotal += amount;
-                    }
-                }
-            });
-
-            const todayEl = document.getElementById('today-sales');
-            const monthEl = document.getElementById('month-sales');
-            if (todayEl) todayEl.innerText = todayTotal;
-            if (monthEl) monthEl.innerText = monthTotal;
-        }
-
-        checkUserSession();
-    </script>
-<script src="status.js"></script>
-<script src="extra.js"></script>
-</body>
-</html>
+`;
+printWindow.document.open();
+printWindow.document.write(invoiceHtml);
+printWindow.document.close();
+}
+// ৯. বিক্রির হিসাব ও Excel এক্সপোর্ট
+function calculateSales() {
+let todayTotal = 0;
+let monthTotal = 0;
+const now = new Date();
+const todayStr = now.toISOString().split('T')[0];
+const currentYear = now.getFullYear();
+const currentMonth = now.getMonth();
+globalOrdersData.forEach(order => {
+const amount = Number(order.total_amount) || 0;
+if (order.created_at) {
+const orderDate = new Date(order.created_at);
+if (orderDate.toISOString().split('T')[0] === todayStr) {
+todayTotal += amount;
+}
+if (orderDate.getFullYear() === currentYear && orderDate.getMonth() === currentMonth) {
+monthTotal += amount;
+}
+}
+});
+const todayEl = document.getElementById('today-sales');
+const monthEl = document.getElementById('month-sales');
+if (todayEl) todayEl.innerText = todayTotal;
+if (monthEl) monthEl.innerText = monthTotal;
+}
+function exportOrdersToCSV() {
+if (!globalOrdersData.length) {
+alert('এক্সপোর্ট করার মতো কোনো অর্ডার নেই!');
+return;
+}
+let csvContent = "\uFEFFনাম,মোবাইল,ঠিকানা,পণ্যসমূহ,মোট বিল,স্ট্যাটাস\n";
+globalOrdersData.forEach(order => {
+const itemsStr = Array.isArray(order.items)
+? order.items.map(i => ${i.title} (${i.quantity}টি)).join(' | ')
+: '';
+const row = [
+"${(order.customer_name || '').replace(/"/g, '""')}",
+"${(order.phone_number || '').replace(/"/g, '""')}",
+"${(order.delivery_address || '').replace(/"/g, '""')}",
+"${itemsStr.replace(/"/g, '""')}",
+order.total_amount || 0,
+"${order.status || 'Pending'}"
+].join(',');
+csvContent += row + "\n";
+});
+const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = khan_super_shop_orders_${new Date().toISOString().slice(0,10)}.csv;
+link.click();
+}
+window.addEventListener('DOMContentLoaded', checkUserSession)
