@@ -3,342 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>খান সুপার শপ - এডমিন প্যানেল</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com"></script>
+    <title>খান সুপার শপ - এডমিন প্যানেল (টেস্ট)</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        .top-header { background-color: #28a745; color: white; text-align: center; padding: 15px; font-size: 24px; font-weight: bold; }
-        .login-container { max-width: 380px; margin: 60px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
-        .login-container h2 { margin-bottom: 20px; color: #333; }
-        .login-container input { width: 92%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
-        .login-container button { width: 98%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .login-container button:hover { background-color: #218838; }
-        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; float: right; margin: 10px 20px; }
-        .main-wrapper { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1300px; margin: auto; clear: both; }
-        .form-container { flex: 1; min-width: 300px; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); height: fit-content; }
-        .form-container input, .form-container textarea { width: 95%; padding: 10px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 5px; }
-        .form-container button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        .orders-container { flex: 1.8; min-width: 350px; background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        body { background-color: #f4f6f9; margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        @media (max-width: 900px) { .admin-layout { flex-direction: column; } }
+        input, textarea { margin-bottom: 12px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit; box-sizing: border-box; }
+        label { font-weight: 600; margin-bottom: 4px; color: #444; font-size: 14px; display: block; }
+        .btn-green { background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-green:hover { background-color: #218838; }
     </style>
 </head>
 <body>
 
-    <div class="top-header">খান সুপার শপ - এডমিন প্যানেল</div>
+        <header style="background-color: #28a745; color: white; padding: 15px 25px; font-size: 24px; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <span>খান সুপার শপ - এডমিন প্যানেল</span>
+        <button type="button" id="logout-btn" onclick="adminLogout()" style="display: none; background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer;">🚪 লগআউট</button>
+    </header>
+    <!-- এডমিন লগইন বক্স -->
+        <!-- এডমিন লগইন বক্স -->
+    <div id="login-section" style="max-width: 400px; margin: 0 auto 25px auto; background: #fff; padding: 20px; border-radius: 8px; border: 2px solid #28a745; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: #28a745;">🔐 অ্যাডমিন লগইন করুন</h3>
+        <input type="email" id="admin-email" placeholder="আপনার ইমেইল দিন" style="width: 100%; padding: 10px;">
+        <input type="password" id="admin-password" placeholder="পাসওয়ার্ড দিন" style="width: 100%; padding: 10px;">
+        
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; cursor: pointer; font-size: 14px; color: #333; justify-content: flex-start;">
+            <input type="checkbox" id="keep-signed-in" checked style="width: 16px; height: 16px; margin: 0; cursor: pointer;">
+            <span>Keep me signed in (আমাকে লগইন অবস্থায় রাখুন)</span>
+        </label>
 
-    <!-- ১. লগইন বক্স -->
-    <div id="login-box" class="login-container">
-        <h2>অ্যাডমিন লগইন</h2>
-        <input type="email" id="admin-email" placeholder="আপনার ইমেইল দিন" required>
-        <input type="password" id="admin-password" placeholder="পাসওয়ার্ড দিন" required>
-        <button id="login-btn" onclick="adminLogin()">লগইন করুন</button>
-        <p id="login-error" style="color: red; margin-top: 12px; font-size: 14px;"></p>
+        <button type="button" onclick="adminLogin()" class="btn-green" style="width: 100%;">লগইন করুন</button>
     </div>
 
-    <!-- ২. মূল অ্যাডমিন প্যানেল -->
-    <div id="admin-panel" style="display: none;">
-        <button class="logout-btn" onclick="adminLogout()">লগআউট</button>
+    <main>
+        <div class="admin-layout" style="display: flex; gap: 25px; padding: 0 20px 40px 20px; align-items: flex-start;">
 
-        <div class="main-wrapper">
-            <!-- বাম পাশে পণ্য যোগ করার ফর্ম -->
-            <div class="form-container">
-                <h2 style="margin-top: 0; color: #333; border-bottom: 2px solid #28a745; padding-bottom: 10px;">নতুন পণ্য যোগ করুন</h2>
-                <form id="productForm">
-                    <label>পণ্যের নাম *</label>
-                    <input type="text" id="title" placeholder="যেমন: আলু ১ কেজি" required>
+            <!-- বাম কলাম: নতুন পণ্য যোগ + দোকানের সেটিংস -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 25px; width: 100%;">
+                
+                <div style="background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                    <h2 style="margin-top: 0; color: #333; border-bottom: 2px solid #28a745; padding-bottom: 10px;">➕ নতুন পণ্য যোগ করুন</h2>
+                    <form id="productForm" style="display: flex; flex-direction: column;">
+                        <label>পণ্যের নাম *</label>
+                        <input type="text" id="title" placeholder="যেমন: আলু ১ কেজি" style="padding: 10px;" required>
 
-                    <label>মূল্য (৳) *</label>
-                    <input type="number" id="price" placeholder="যেমন: ১৫০" required>
+                        <label>মূল্য (৳) *</label>
+                        <input type="number" id="price" placeholder="যেমন: ১৪০" style="padding: 10px;" required>
 
-                    <label>পণ্যের বিবরণ (ঐচ্ছিক)</label>
-                    <textarea id="description" rows="3" placeholder="পণ্যটি সম্পর্কে কিছু লিখুন"></textarea>
+                        <label>পণ্যের বিবরণ</label>
+                        <textarea id="description" placeholder="পণ্যটি সম্পর্কে কিছু লিখুন..." style="padding: 10px;" rows="2"></textarea>
 
-                    <label>পণ্যের ছবির লিংক (URL)</label>
-                    <input type="url" id="imageUrl" placeholder="https://example.com">
+                        <label style="color: #28a745;">📷 ডিভাইস থেকে সরাসরি ছবি আপলোড করুন:</label>
+                        <input type="file" id="imageFile" accept="image/*" style="padding: 6px; background: #f9f9f9;">
+                        <small id="upload-status" style="color: #007bff; font-weight: bold; margin-bottom: 8px; display: block;"></small>
 
-                    <button type="submit">ডাটাবেজে লোড করুন</button>
-                </form>
+                        <label>অথবা ছবির লিংক (URL)</label>
+                        <input type="text" id="imageUrl" placeholder="ছবি আপলোড করলে অটোমেটিক বসবে বা লিংক দিন" style="padding: 10px;">
+
+                        <button type="submit" class="btn-green">ডাটাবেজে লোড করুন</button>
+                    </form>
+                </div>
+
+                <div style="background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                    <h2 style="margin-top: 0; color: #333; border-bottom: 2px solid #28a745; padding-bottom: 10px;">⚙️ দোকানের সাধারণ সেটিংস</h2>
+                    <form id="shopSettingsForm" style="display: flex; flex-direction: column;">
+                        <label>দোকানের নাম</label>
+                        <input type="text" id="set-shop-name" placeholder="খান সুপার শপ" style="padding: 10px;">
+
+                        <label>দোকানের মোবাইল নাম্বার</label>
+                        <input type="text" id="set-shop-phone" placeholder="০১৭XXXXXXXX" style="padding: 10px;">
+
+                        <label>দোকানের ঠিকানা</label>
+                        <input type="text" id="set-shop-address" placeholder="দোকানের ঠিকানা লিখুন" style="padding: 10px;">
+
+                        <label>অফার ব্যানার / ডিসপ্লে নোটিশ</label>
+                        <textarea id="set-banner-text" placeholder="বিশেষ অফারের লেখা এখানে দিন..." style="padding: 10px;" rows="2"></textarea>
+
+                        <button type="submit" class="btn-green" style="background-color: #007bff;">সেটিংস আপডেট করুন</button>
+                    </form>
+                </div>
+
             </div>
 
-            <!-- ডান পাশে গ্রাহকদের অর্ডার টেবিল -->
-            <div class="orders-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
-                    <h2 style="margin: 0; color: #333;">গ্রাহকদের অর্ডারসমূহ</h2>
-                    <div style="display: flex; gap: 15px; margin: 15px 0;">
-                        <div style="flex: 1; background: #28a745; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                            <div style="font-size: 14px; opacity: 0.9;">আজকের মোট বিক্রি</div>
-                            <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="today-sales">0</span></div>
-                        </div>
-                        <div style="flex: 1; background: #007bff; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                            <div style="font-size: 14px; opacity: 0.9;">এই মাসের মোট বিক্রি</div>
-                            <div style="font-size: 26px; font-weight: bold; margin-top: 5px;">৳ <span id="month-sales">0</span></div>
+            <!-- ডান কলাম: গ্রাহকদের অর্ডার + সকল পণ্যের তালিকা -->
+            <div style="flex: 1.6; display: flex; flex-direction: column; gap: 25px; width: 100%;">
+                
+                <div style="background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+<!-- আজকের ও এই মাসের মোট বিক্রির কার্ড -->
+<div style="display: flex; gap: 15px; margin-bottom: 18px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 140px; background: #28a745; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="font-size: 14px; margin-bottom: 6px; font-weight: 500;">আজকের মোট বিক্রি</div>
+        <div style="font-size: 24px; font-weight: bold;">৳ <span id="today-sales">0</span></div>
+    </div>
+    <div style="flex: 1; min-width: 140px; background: #17a2b8; color: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="font-size: 14px; margin-bottom: 6px; font-weight: 500;">এই মাসের মোট বিক্রি</div>
+        <div style="font-size: 24px; font-weight: bold;">৳ <span id="month-sales">0</span></div>
+    </div>
+</div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
+                        <h2 style="margin: 0; color: #333;">🛒 গ্রাহকদের অর্ডারসমূহ</h2>
+                        <div>
+                            <button type="button" onclick="loadOrders()" style="background: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 রিফ্রেশ</button>
+                            <button type="button" onclick="exportOrdersToCSV()" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px;">📥 Excel</button>
                         </div>
                     </div>
-
-                    <div>
-                        <button type="button" onclick="loadOrders()" style="background-color: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 রিফ্রেশ</button>
-                        <button type="button" onclick="exportOrdersToCSV()" style="background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px;">📥 এক্সপোর্ট (Excel)</button>
+                    <div style="overflow-x: auto;">
+                        <table id="orders-table" style="width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #28a745; color: white;">
+                                    <th style="padding: 10px; border: 1px solid #ddd;">নাম</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">মোবাইল</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">ঠিকানা</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">পণ্যসমূহ</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd;">মোট বিল</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-tbody">
+                                <tr><td colspan="6" style="padding: 15px; text-align: center; color: #666;">অর্ডার লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div style="overflow-x: auto;">
-                    <table id="orders-table" style="width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; font-size: 14px;">
-                        <thead>
-                            <tr style="background-color: #28a745; color: white;">
-                                <th style="padding: 10px; border: 1px solid #ddd;">নাম</th>
-                                <th style="padding: 10px; border: 1px solid #ddd;">মোবাইল</th>
-                                <th style="padding: 10px; border: 1px solid #ddd;">ঠিকানা</th>
-                                <th style="padding: 10px; border: 1px solid #ddd;">পণ্যসমূহ</th>
-                                <th style="padding: 10px; border: 1px solid #ddd;">মোট বিল</th>
-                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">অ্যাকশন</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orders-tbody">
-                            <tr>
-                                <td colspan="6" style="padding: 15px; text-align: center; color: #666;">অর্ডার লোড হচ্ছে...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div style="background-color: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
+                        <h2 style="margin: 0; color: #333;">📦 সকল পণ্যের তালিকা (এডিট / ডিলিট)</h2>
+                        <button type="button" onclick="loadAdminProducts()" style="background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">🔄 তালিকা রিফ্রেশ</button>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto; margin-top: 15px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #343a40; color: white;">
+                                    <th style="padding: 10px; text-align: center; width: 60px;">ছবি</th>
+                                    <th style="padding: 10px;">পণ্যের নাম</th>
+                                    <th style="padding: 10px; width: 90px;">মূল্য (৳)</th>
+                                    <th style="padding: 10px; text-align: center; width: 150px;">অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-product-list">
+                                <tr><td colspan="4" style="padding: 15px; text-align: center; color: #666;">পণ্য লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- জাভাস্ক্রিপ্ট কোড -->
-    <script>
-        // ১. সুপাবেস কানেকশন সেটআপ
-        const SUPABASE_URL = 'https://supabase.co'; 
-        const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI'; 
-
-        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let globalOrdersData = [];
-
-        // ২. সেশন চেক করা
-        async function checkUserSession() {
-            const { data: { session } } = await sbClient.auth.getSession();
-            if (session) {
-                document.getElementById('login-box').style.display = 'none';
-                document.getElementById('admin-panel').style.display = 'block';
-                loadOrders();
-                if (typeof calculateSales === 'function') calculateSales();
-            } else {
-                document.getElementById('login-box').style.display = 'block';
-                document.getElementById('admin-panel').style.display = 'none';
-            }
-        }
-
-        // ৩. অ্যাডমিন লগইন
-        async function adminLogin() {
-            const email = document.getElementById('admin-email').value.trim();
-            const password = document.getElementById('admin-password').value;
-            const errorMsg = document.getElementById('login-error');
-            const loginBtn = document.getElementById('login-btn');
-
-            if (!email || !password) {
-                errorMsg.innerText = "অনুগ্রহ করে ইমেইল এবং পাসওয়ার্ড দিন।";
-                return;
-            }
-
-            errorMsg.style.color = "blue";
-            errorMsg.innerText = "যাচাই করা হচ্ছে...";
-            loginBtn.disabled = true;
-
-            const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
-            loginBtn.disabled = false;
-
-            if (error) {
-                errorMsg.style.color = "red";
-                errorMsg.innerText = "ভুল ইমেইল বা পাসওয়ার্ড! আবার চেষ্টা করুন।";
-            } else {
-                errorMsg.innerText = "";
-                checkUserSession();
-            }
-        }
-
-        // ৪. অ্যাডমিন লগআউট
-        async function adminLogout() {
-            await sbClient.auth.signOut();
-            checkUserSession();
-        }
-
-        // ৫. নতুন পণ্য যোগ করা
-        document.getElementById('productForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); 
-            const title = document.getElementById('title').value;
-            const price = parseFloat(document.getElementById('price').value); 
-            const description = document.getElementById('description').value.trim() || null;
-            const image_url = document.getElementById('imageUrl').value.trim() || null;
-
-            const submitBtn = e.target.querySelector('button');
-submitBtn.innerText = 'সেভ হচ্ছে...';
-submitBtn.disabled = true;
-const { error } = await sbClient.from('products').insert([{ title, price, description, image_url }]);
-submitBtn.innerText = 'ডাটাবেজে লোড করুন';
-submitBtn.disabled = false;
-if (error) {
-alert('পণ্য যোগ করতে সমস্যা হয়েছে: ' + error.message);
-} else {
-alert('পণ্যটি সফলভাবে ডাটাবেজে যোগ করা হয়েছে! 🎉');
-document.getElementById('productForm').reset();
-}
-});
-// ৬. অর্ডার লোড করা
-async function loadOrders() {
-const tbody = document.getElementById('orders-tbody');
-try {
-const { data: orders, error } = await sbClient
-.from('orders')
-.select('*')
-.order('id', { ascending: false });
-if (error) throw error;
-globalOrdersData = orders || [];
-calculateSales();
-if (globalOrdersData.length === 0) {
-tbody.innerHTML = <tr><td colspan="6" style="padding: 15px; text-align: center; color: #999;">বর্তমানে কোনো অর্ডার নেই।</td></tr>;
-return;
-}
-tbody.innerHTML = '';
-globalOrdersData.forEach((order, index) => {
-let itemsHtml = '';
-if (Array.isArray(order.items)) {
-itemsHtml = order.items.map(item => ${item.title} (${item.quantity}টি)).join('
-');
-} else {
-itemsHtml = '(কোনো পণ্যের তথ্য নেই)';
-}
-const row = `
-${order.customer_name}
-${order.phone_number}${order.delivery_address}${itemsHtml}৳${order.total_amount}; tbody.innerHTML += row; }); } catch (error) { tbody.innerHTML = অর্ডার লোড করা যায়নি: ${error.message}`;
-}
-}
-// ৭. অর্ডার ডিলিট না করে নিরাপদভাবে 'Delivered' স্ট্যাটাস আপডেট করা
-async function deleteOrder(orderId) {
-if (!confirm("আপনি কি নিশ্চিত যে এই অর্ডারটি ডেলিভারি সম্পন্ন হয়েছে? (এটি হিসাব থেকে মুছবে না)")) return;
-const { error } = await sbClient
-.from('orders')
-.update({ status: 'Delivered' })
-.eq('id', orderId);
-if (error) {
-alert('সমস্যা হয়েছে: ' + error.message);
-} else {
-alert('অর্ডারটি ডেলিভারড হিসেবে সংরক্ষিত হয়েছে! ✅');
-loadOrders();
-if (typeof calculateSales === 'function') calculateSales();
-}
-}
-// ৮. প্রতিটি পণ্যের আলাদা দাম ও গুণফলসহ মেমো প্রিন্ট (110 × 2 = 220 টাকা)
-function printOrderByIndex(index) {
-const order = globalOrdersData[index];
-if (!order) return;
-const printWindow = window.open('', '_blank', 'width=700,height=700');
-let tableRowsHtml = '';
-if (Array.isArray(order.items)) {
-order.items.forEach((item, idx) => {
-const qty = Number(item.quantity) || 1;
-const unitPrice = Number(item.price) || 0;
-const subTotal = unitPrice * qty;
-const priceCalculationText = unitPrice > 0
-? ${unitPrice} × ${qty} = ${subTotal} টাকা
-: '-';
-tableRowsHtml += `
-${idx + 1}
-\({item.title} (\){qty}টি)${priceCalculationText}`;
-});
-}
-const invoiceHtml = `
-
-
-খান সুপার শপ - ক্যাশ মেমো
-
-body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 30px; color: #333; }
-.invoice-box { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px; }
-.header { text-align: center; border-bottom: 3px double #28a745; padding-bottom: 15px; margin-bottom: 20px; }
-.shop-title { color: #28a745; margin: 0; font-size: 28px; }
-.customer-info { margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; }
-.item-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-.item-table th { background-color: #28a745; color: white; padding: 10px; }
-.total-row { font-size: 18px; font-weight: bold; color: #d9534f; background: #fff5f5; }
-
-
-
-
-
-খান সুপার শপ
-কাস্টমার ডেলিভারি ক্যাশ মেমো
-
-
-গ্রাহকের নাম: ${order.customer_name}
-মোবাইল নাম্বার: ${order.phone_number}
-ডেলিভারি ঠিকানা: ${order.delivery_address}
-${tableRowsHtml}
-
-ক্র.নং	পণ্যের বিবরণ ও পরিমাণ	মূল্য (৳)
-সর্বমোট বিল:
-	${order.total_amount} টাকা
-
-খান সুপার শপ থেকে কেনাকাটা করার জন্য ধন্যবাদ!
-
-
-
-window.onload = function() { window.print(); };
-</script>
-
-
-`;
-printWindow.document.open();
-printWindow.document.write(invoiceHtml);
-printWindow.document.close();
-}
-// ৯. বিক্রির হিসাব ও Excel এক্সপোর্ট
-function calculateSales() {
-let todayTotal = 0;
-let monthTotal = 0;
-const now = new Date();
-const todayStr = now.toISOString().split('T')[0];
-const currentYear = now.getFullYear();
-const currentMonth = now.getMonth();
-globalOrdersData.forEach(order => {
-const amount = Number(order.total_amount) || 0;
-if (order.created_at) {
-const orderDate = new Date(order.created_at);
-if (orderDate.toISOString().split('T')[0] === todayStr) {
-todayTotal += amount;
-}
-if (orderDate.getFullYear() === currentYear && orderDate.getMonth() === currentMonth) {
-monthTotal += amount;
-}
-}
-});
-const todayEl = document.getElementById('today-sales');
-const monthEl = document.getElementById('month-sales');
-if (todayEl) todayEl.innerText = todayTotal;
-if (monthEl) monthEl.innerText = monthTotal;
-}
-function exportOrdersToCSV() {
-if (!globalOrdersData.length) {
-alert('এক্সপোর্ট করার মতো কোনো অর্ডার নেই!');
-return;
-}
-let csvContent = "\uFEFFনাম,মোবাইল,ঠিকানা,পণ্যসমূহ,মোট বিল,স্ট্যাটাস\n";
-globalOrdersData.forEach(order => {
-const itemsStr = Array.isArray(order.items)
-? order.items.map(i => ${i.title} (${i.quantity}টি)).join(' | ')
-: '';
-const row = [
-"${(order.customer_name || '').replace(/"/g, '""')}",
-"${(order.phone_number || '').replace(/"/g, '""')}",
-"${(order.delivery_address || '').replace(/"/g, '""')}",
-"${itemsStr.replace(/"/g, '""')}",
-order.total_amount || 0,
-"${order.status || 'Pending'}"
-].join(',');
-csvContent += row + "\n";
-});
-const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-const link = document.createElement("a");
-link.href = URL.createObjectURL(blob);
-link.download = khan_super_shop_orders_${new Date().toISOString().slice(0,10)}.csv;
-link.click();
-}
-window.addEventListener('DOMContentLoaded', checkUserSession)
+    <script src="supabase.js"></script>
+    <script src="admin-core.js"></script>
+</body>
+</html>
