@@ -153,7 +153,8 @@ async function loadAdminProducts() {
                 <img src="${p.image_url || 'https://placeholder.com'}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
             </td>
             <td style="padding: 8px; font-weight: 500;">${p.title}</td>
-            <td style="padding: 8px; font-weight: bold; color: #16a34a;">৳${p.price}</td>
+            <td style="padding: 8px; font-weight: bold; color: #16a34a;">
+    ${p.old_price && Number(p.old_price) > Number(p.price) ? `<del style="color:#888; font-size:12px;">৳${p.old_price}</del> ` : ''}৳${p.price}
             <td style="padding: 8px; text-align: center;">
                 <button type="button" onclick="toggleProductStock(${p.id}, ${isInStock})" style="background:${stockBtnColor}; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:11px; margin-bottom:3px;">${stockBtnText}</button>
                 <button type="button" onclick="editProduct(${p.id}, '${String(p.title).replace(/'/g, "\\'")}', ${p.price})" style="background:#2563eb; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:11px;">✏️ এডিট</button>
