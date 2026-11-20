@@ -142,42 +142,38 @@
             }
         }
 
-        function renderProducts(list) {
+            function renderProducts(list) {
             const grid = document.getElementById('pos-product-grid');
             grid.innerHTML = '';
             list.forEach(p => {
                 const title = p.title || p.name || 'পণ্য';
                 const price = Number(p.price || 0);
+                // আপনার ডাটাবেজের আসল দাম (old_price বা original_price বা regular_price) চেক করা
+                const oldPrice = Number(p.old_price || p.original_price || p.regular_price || 0);
                 const img = p.image || p.image_url || 'https://placeholder.com';
+                
+                let discountBadge = '';
+                let priceHtml = `<div class="product-price">৳${price}</div>`;
+
+                if (oldPrice > price) {
+                    const percent = Math.round(((oldPrice - price) / oldPrice) * 100);
+                    discountBadge = `<div style="position:absolute; top:6px; left:6px; background:#d32f2f; color:#fff; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔥 ${percent}% ছাড়</div>`;
+                    priceHtml = `<div class="product-price"><del style="color:#888; font-size:12px; margin-right:4px;">৳${oldPrice}</del>৳${price}</div>`;
+                }
+
                 const card = document.createElement('div');
                 card.className = 'product-card';
+                card.style.position = 'relative';
                 card.innerHTML = `
+                    ${discountBadge}
                     <img src="${img}" alt="${title}" onerror="this.src='https://placeholder.com'">
                     <div class="product-title">${title}</div>
-                    <div class="product-price">৳${price}</div>
+                    ${priceHtml}
                 `;
                 card.onclick = () => addToCart(p);
                 grid.appendChild(card);
             });
         }
-
-        function filterProducts() {
-            const q = document.getElementById('pos-search').value.toLowerCase();
-            const filtered = allProducts.filter(p => (p.title || p.name || '').toLowerCase().includes(q));
-            renderProducts(filtered);
-        }
-
-        function addToCart(prod) {
-            const title = prod.title || prod.name;
-            const existing = cart.find(item => item.title === title);
-            if (existing) {
-                existing.quantity += 1;
-            } else {
-                cart.push({ id: prod.id, title: title, price: Number(prod.price), quantity: 1 });
-            }
-            renderCart();
-        }
-
         function renderCart() {
             const tbody = document.getElementById('pos-cart-body');
             tbody.innerHTML = '';
