@@ -178,13 +178,15 @@
             renderProducts(filtered);
         }
 
-        function addToCart(prod) {
+                function addToCart(prod) {
             const title = prod.title || prod.name;
+            const price = Number(prod.price || 0);
+            const oldPrice = Number(prod.old_price || prod.original_price || prod.regular_price || price);
             const existing = cart.find(function (item) { return item.title === title; });
             if (existing) {
                 existing.quantity += 1;
             } else {
-                cart.push({ id: prod.id, title: title, price: Number(prod.price), quantity: 1 });
+                cart.push({ id: prod.id, title: title, price: price, oldPrice: oldPrice, quantity: 1 });
             }
             renderCart();
         }
@@ -229,8 +231,8 @@
 
         function updateSummary() {
             const subtotal = cart.reduce(function (sum, item) { return sum + (item.price * item.quantity); }, 0);
-            const discount = Number(document.getElementById('pos-discount').value) || 0;
-            const total = Math.max(0, subtotal - discount);
+            const extraDiscount = Number(document.getElementById('pos-discount').value) || 0;
+            const total = Math.max(0, subtotal - extraDiscount);
             const paid = Number(document.getElementById('pos-paid').value) || 0;
             const change = paid > total ? (paid - total) : 0;
 
@@ -272,11 +274,15 @@
 
             const custName = document.getElementById('pos-cust-name').value.trim() || 'সরাসরি ক্রেতা';
             const custPhone = document.getElementById('pos-cust-phone').value.trim() || 'POS Counter';
+            const subtotal = Number(document.getElementById('pos-subtotal').innerText);
             const total = Number(document.getElementById('pos-total').innerText);
-            const discount = Number(document.getElementById('pos-discount').value) || 0;
+            const extraDiscount = Number(document.getElementById('pos-discount').value) || 0;
+            const productDiscount = cart.reduce(function (sum, item) {
+                return sum + (Math.max(0, (item.oldPrice || item.price) - item.price) * item.quantity);
+            }, 0);
+            const totalSaved = productDiscount + extraDiscount;
 
             try {
-                // ডাটাবেজের সঠিক কলামের নাম অটোমেটিক চেক করে নেওয়া
                 const checkRes = await fetch(URL + '/rest/v1/orders?limit=1', { headers: headers });
                 const sampleRows = checkRes.ok ? await checkRes.json() : [];
                 const sample = sampleRows.shift() || {};
@@ -289,7 +295,6 @@
                     status: 'Completed'
                 };
 
-                // ফোনের কলামটি যে নামে আছে (phone / mobile / customer_mobile) তাতে বসানো
                 if ('phone' in sample) orderPayload.phone = custPhone;
                 else if ('mobile' in sample) orderPayload.mobile = custPhone;
                 else if ('customer_mobile' in sample) orderPayload.customer_mobile = custPhone;
@@ -310,7 +315,7 @@
 
                 const saved = await res.json();
                 const orderId = (saved && saved.shift()?.id) || 'POS';
-                printPOSReceipt(orderId, custName, custPhone, cart, total, discount);
+                printPOSReceipt(orderId, custName, custPhone, cart, subtotal, total, extraDiscount, totalSaved);
 
                 cart = [];
                 document.getElementById('pos-discount').value = 0;
@@ -323,7 +328,7 @@
             }
         }
 
-        function printPOSReceipt(id, name, phone, items, total, discount) {
+        function printPOSReceipt(id, name, phone, items, subtotal, total, extraDiscount, totalSaved) {
             const topQR = createQR(SHOP_LINK, 120);
             const bottomQR = createQR('Khan Super Shop | Memo: #' + id + ' | Name: ' + name + ' | Total: ৳' + total, 140);
             const rows = items.map(function (it, i) {
@@ -349,9 +354,11 @@
                 '<thead><tr style="border-bottom:1px solid #ddd;"><th style="text-align:left;">পণ্য</th><th>পরিমাণ</th><th style="text-align:right;">দাম</th></tr></thead>' +
                 '<tbody>' + rows + '</tbody>' +
                 '</table>' +
-                '<div style="text-align:right; font-size:13px; margin-top:8px;">' +
-                (discount > 0 ? '<div>ছাড় (Discount): -৳' + discount + '</div>' : '') +
-                '<div style="font-size:16px; font-weight:bold; color:#d32f2f;">সর্বমোট বিল: ৳' + total + ' টাকা</div>' +
+                '<div style="text-align:right; font-size:12px; margin-top:8px; line-height:1.6;">' +
+                '<div>উপ-মোট (Subtotal): ৳' + subtotal + '</div>' +
+                '<div>বিশেষ ছাড় (Discount): -৳' + extraDiscount + '</div>' +
+                '<div style="font-size:16px; font-weight:bold; color:#d32f2f; border-top:1px dashed #ccc; padding-top:4px;">সর্বমোট বিল: ৳' + total + ' টাকা</div>' +
+                (totalSaved > 0 ? '<div style="background:#e8f5e9; color:#2e7d32; font-weight:bold; text-align:center; padding:4px; border-radius:4px; margin-top:6px;">🎉 আপনি মোট ৳' + totalSaved + ' টাকা ছাড় (সাশ্রয়) পেয়েছেন!</div>' : '') +
                 '</div>' +
                 '<div style="text-align:center; margin-top:12px; border-top:1px dashed #ccc; padding-top:8px;">' +
                 '<img src="' + bottomQR + '" style="width:72px; height:72px; border:1px solid #ddd; padding:2px;">' +
