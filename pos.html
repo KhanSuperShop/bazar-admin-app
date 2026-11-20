@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>খান সুপার শপ - POS কাউন্টার</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background: #f4f6f9; color: #333; }
+        header { background: #2e7d32; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        header h1 { margin: 0; font-size: 20px; }
+        .nav-links a { color: #fff; text-decoration: none; background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 5px; font-size: 13px; font-weight: bold; }
+        .pos-container { display: flex; gap: 15px; padding: 15px; max-width: 1350px; margin: 0 auto; height: calc(100vh - 60px); }
+        .products-panel { flex: 1.4; background: #fff; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .search-bar { width: 100%; padding: 10px 14px; border: 2px solid #2e7d32; border-radius: 6px; font-size: 15px; margin-bottom: 12px; outline: none; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; overflow-y: auto; padding-right: 4px; }
+        .product-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.15s; background: #fafafa; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-card:hover { border-color: #2e7d32; background: #e8f5e9; transform: translateY(-2px); }
+        .product-card img { width: 100%; height: 80px; object-fit: contain; margin-bottom: 6px; border-radius: 4px; }
+        .product-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #222; }
+        .product-price { color: #2e7d32; font-weight: bold; font-size: 14px; }
+        .billing-panel { flex: 1; background: #fff; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .customer-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .customer-inputs input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
+        .cart-table-wrap { flex: 1; overflow-y: auto; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f1f8e9; color: #2e7d32; text-align: left; padding: 8px 6px; position: sticky; top: 0; }
+        td { padding: 7px 6px; border-bottom: 1px solid #f0f0f0; }
+        .qty-input { width: 48px; text-align: center; padding: 3px; border: 1px solid #bbb; border-radius: 4px; font-weight: bold; }
+        .summary-box { background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 14px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center; }
+        .summary-row input { width: 90px; padding: 4px 6px; text-align: right; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
+        .grand-total { font-size: 18px; font-weight: bold; color: #d32f2f; border-top: 1px dashed #ccc; padding-top: 6px; }
+        .action-btns { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-pay { flex: 2; background: #2e7d32; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-clear { flex: 1; background: #e53935; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        @media (max-width: 768px) {
+            .pos-container { flex-direction: column; height: auto; }
+            .product-grid { max-height: 320px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🛒 খান সুপার শপ - POS কাউন্টার</h1>
+        <div class="nav-links">
+            <a href="admin.html">📋 অ্যাডমিন প্যানেল</a>
+        </div>
+    </header>
+
+    <div class="pos-container">
+        <!-- বাম পাশ: পণ্যের তালিকা -->
+        <div class="products-panel">
+            <input type="text" id="pos-search" class="search-bar" placeholder="🔍 পণ্যের নাম লিখে খুঁজুন..." oninput="filterProducts()">
+            <div id="pos-product-grid" class="product-grid">
+                <p>পণ্য লোড হচ্ছে...</p>
+            </div>
+        </div>
+
+        <!-- ডান পাশ: বিলিং ও ক্যাশ কাউন্টার -->
+        <div class="billing-panel">
+            <div class="customer-inputs">
+                <input type="text" id="pos-cust-name" placeholder="গ্রাহকের নাম (ঐচ্ছিক)" value="সরাসরি ক্রেতা">
+                <input type="text" id="pos-cust-phone" placeholder="মোবাইল নাম্বার (ঐচ্ছিক)">
+            </div>
+
+            <div class="cart-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>পণ্য</th>
+                            <th>দর</th>
+                            <th>পরিমাণ</th>
+                            <th>মোট</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pos-cart-body"></tbody>
+                </table>
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>উপ-মোট (Subtotal):</span>
+                    <strong>৳<span id="pos-subtotal">0</span></strong>
+                </div>
+                <div class="summary-row">
+                    <span>ডিসকাউন্ট (ছাড় ৳):</span>
+                    <input type="number" id="pos-discount" value="0" min="0" oninput="updateSummary()">
+                </div>
+                <div class="summary-row grand-total">
+                    <span>সর্বমোট বিল:</span>
+                    <span>৳<span id="pos-total">0</span></span>
+                </div>
+                <div class="summary-row" style="margin-top:8px;">
+                    <span>গ্রাহক দিয়েছেন (৳):</span>
+                    <input type="number" id="pos-paid" placeholder="0" oninput="updateSummary()">
+                </div>
+                <div class="summary-row" style="color:#2e7d32; font-weight:bold;">
+                    <span>ফেরত পাবেন (Change):</span>
+                    <span>৳<span id="pos-change">0</span></span>
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <button class="btn-clear" onclick="clearCart()">🗑️ মুছুন</button>
+                <button class="btn-pay" id="pos-submit-btn" onclick="completePOSOrder()">🖨️ বিল সম্পন্ন ও প্রিন্ট</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const URL = 'https://supabase.co';
+        const KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
+        const SHOP_LINK = 'https://github.io';
+        const headers = {
+            'apikey': KEY,
+            'Authorization': `Bearer ${KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        let allProducts = [];
+        let cart = [];
+
+        async function loadPOSProducts() {
+            try {
+                const res = await fetch(`${URL}/rest/v1/products?select=*`, { headers });
+                if (res.ok) {
+                    allProducts = await res.json();
+                    renderProducts(allProducts);
+                }
+            } catch (e) {
+                document.getElementById('pos-product-grid').innerHTML = '<p style="color:red;">পণ্য লোড করতে সমস্যা হয়েছে।</p>';
+            }
+        }
+
+        function renderProducts(list) {
+            const grid = document.getElementById('pos-product-grid');
+            grid.innerHTML = '';
+            list.forEach(p => {
+                const title = p.title || p.name || 'পণ্য';
+                const price = Number(p.price || 0);
+                const img = p.image || p.image_url || 'https://placeholder.com';
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="${img}" alt="${title}">
+                    <div class="product-title">${title}</div>
+                    <div class="product-price">৳${price}</div>
+                `;
+                card.onclick = () => addToCart(p);
+                grid.appendChild(card);
+            });
+        }
+
+        function filterProducts() {
+            const q = document.getElementById('pos-search').value.toLowerCase();
+            const filtered = allProducts.filter(p => (p.title || p.name || '').toLowerCase().includes(q));
+            renderProducts(filtered);
+        }
+
+        function addToCart(prod) {
+            const title = prod.title || prod.name;
+            const existing = cart.find(item => item.title === title);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ id: prod.id, title: title, price: Number(prod.price), quantity: 1 });
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const tbody = document.getElementById('pos-cart-body');
+            tbody.innerHTML = '';
+            cart.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.title}</strong></td>
+                    <td>৳${item.price}</td>
+                    <td><input type="number" class="qty-input" min="1" value="${item.quantity}" oninput="setQty(${idx}, this.value)"></td>
+                    <td><strong>৳${item.price * item.quantity}</strong></td>
+                    <td><button onclick="removeItem(${idx})" style="border:none; background:#ffebee; color:#d32f2f; border-radius:4px; cursor:pointer; padding:3px 6px;">✕</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateSummary();
+        }
+
+        function setQty(idx, val) {
+            const num = parseInt(val, 10);
+            if (!isNaN(num) && num >= 1) {
+                cart[idx].quantity = num;
+                renderCart();
+            }
+        }
+
+        function removeItem(idx) {
+            cart.splice(idx, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            if (cart.length > 0 && confirm('বর্তমান বিলটি মুছে ফেলতে চান?')) {
+                cart = [];
+                document.getElementById('pos-discount').value = 0;
+                document.getElementById('pos-paid').value = '';
+                renderCart();
+            }
+        }
+
+        function updateSummary() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discount = Number(document.getElementById('pos-discount').value) || 0;
+            const total = Math.max(0, subtotal - discount);
+            const paid = Number(document.getElementById('pos-paid').value) || 0;
+            const change = paid > total ? (paid - total) : 0;
+
+            document.getElementById('pos-subtotal').innerText = subtotal;
+            document.getElementById('pos-total').innerText = total;
+            document.getElementById('pos-change').innerText = change;
+        }
+
+        function createQR(text, size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+            const modules = 25, cell = size / (modules + 2);
+            ctx.fillStyle = '#000';
+            function finder(r, c) {
+                ctx.fillRect((c+1)*cell, (r+1)*cell, 7*cell, 7*cell);
+                ctx.fillStyle = '#fff'; ctx.fillRect((c+2)*cell, (r+2)*cell, 5*cell, 5*cell);
+                ctx.fillStyle = '#000'; ctx.fillRect((c+3)*cell, (r+3)*cell, 3*cell, 3*cell);
+            }
+            finder(0,0); finder(0, modules-7); finder(modules-7, 0);
+            let hash = 2166136261;
+            for (let i = 0; i < text.length; i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+            for (let r = 0; r < modules; r++) {
+                for (let c = 0; c < modules; c++) {
+                    if ((r<8&&c<8)||(r<8&&c>=modules-8)||(r>=modules-8&&c<8)) continue;
+                    const bit = ((hash ^ ((text.charCodeAt((r*modules+c)%text.length)||1)*(r+1)*(c+3))) >>> ((r+c)%16)) & 1;
+                    if (bit) ctx.fillRect((c+1)*cell, (r+1)*cell, cell, cell);
+                }
+            }
+            return canvas.toDataURL('image/png');
+        }
+
+        async function completePOSOrder() {
+            if (cart.length === 0) return alert('দয়া করে অন্তত ১টি পণ্য বিলে যোগ করুন!');
+            const btn = document.getElementById('pos-submit-btn');
+            btn.innerText = 'সেভ হচ্ছে...';
+            btn.disabled = true;
+
+            const custName = document.getElementById('pos-cust-name').value.trim() || 'সরাসরি ক্রেতা';
+            const custPhone = document.getElementById('pos-cust-phone').value.trim() || 'POS Counter';
+            const total = Number(document.getElementById('pos-total').innerText);
+            const discount = Number(document.getElementById('pos-discount').value) || 0;
+
+            try {
+                const res = await fetch(`${URL}/rest/v1/orders`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        customer_name: custName,
+                        customer_phone: custPhone,
+                        delivery_address: 'দোকান কাউন্টার (POS)',
+                        items: cart,
+                        total_amount: total,
+                        status: 'Completed'
+                    })
+                });
+
+                btn.innerText = '🖨️ বিল সম্পন্ন ও প্রিন্ট';
+                btn.disabled = false;
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    return alert('অর্ডার সেভ করতে সমস্যা হয়েছে: ' + (err.message || 'Check DB'));
+                }
+
+                const saved = await res.json();
+                const orderId = (saved && saved.shift()?.id) || 'POS';
+                printPOSReceipt(orderId, custName, custPhone, cart, total, discount);
+
+                cart = [];
+                document.getElementById('pos-discount').value = 0;
+                document.getElementById('pos-paid').value = '';
+                renderCart();
+            } catch (e) {
+                btn.innerText = '🖨️ বিল সম্পন্ন ও প্রিন্ট';
+                btn.disabled = false;
+                alert('নেটওয়ার্ক সমস্যা: ' + e.message);
+            }
+        }
+
+        function printPOSReceipt(id, name, phone, items, total, discount) {
+            const topQR = createQR(SHOP_LINK, 120);
+            const bottomQR = createQR(`Khan Super Shop | Memo: #${id} | Name: ${name} | Total: ৳${total}`, 140);
+            const rows = items.map((it, i) => `<tr><td>${i+1}. ${it.title}</td><td style="text-align:center;">${it.quantity}</td><td style="text-align:right;">৳${it.price * it.quantity}</td></tr>`).join('');
+
+            const w = window.open('', '_blank');
+            w.document.write(`
+                <html><head><title>POS Memo #${id}</title></head>
+                <body style="font-family:sans-serif; max-width:340px; margin:10px auto; border:2px solid #2e7d32; padding:12px; border-radius:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #2e7d32; padding-bottom:8px;">
+                        <div>
+                            <h2 style="margin:0; color:#2e7d32; font-size:18px;">খান সুপার শপ</h2>
+                            <div style="font-size:11px; color:#555;">POS ক্যাশ মেমো #${id}</div>
+                            <div style="font-size:10px; color:#666;">${new Date().toLocaleString('bn-BD')}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <img src="${topQR}" style="width:55px; height:55px; border:1px solid #ccc; padding:2px;">
+                            <div style="font-size:7px; color:#2e7d32; font-weight:bold;">অনলাইন শপ</div>
+                        </div>
+                    </div>
+                    <div style="font-size:12px; margin:8px 0;">
+                        <strong>গ্রাহক:</strong> ${name} (${phone})
+                    </div>
+${rows}
+
+পণ্য	পরিমাণ	দাম
+
+${discount > 0 ? <div>ছাড় (Discount): -৳${discount}</div> : ''}
+সর্বমোট বিল: ৳${total} টাকা
+
+
+
+অর্ডার যাচাই QR #${id}
+
+
+`);
+w.document.close();
+setTimeout(() => { w.print(); }, 250);
+}
+loadPOSProducts();
