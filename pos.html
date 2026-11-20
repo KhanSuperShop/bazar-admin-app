@@ -108,13 +108,13 @@
             </div>
         </div>
     </div>
-        <script>
+           <script>
         const URL = 'https://kuecacvhadqzywvkmauo.supabase.co';
         const KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
         const SHOP_LINK = 'https://github.io';
         const headers = {
             'apikey': KEY,
-            'Authorization': `Bearer ${KEY}`,
+            'Authorization': 'Bearer ' + KEY,
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
         };
@@ -125,67 +125,81 @@
         async function loadPOSProducts() {
             const grid = document.getElementById('pos-product-grid');
             try {
-                const res = await fetch(`${URL}/rest/v1/products?select=*`, { headers });
+                const res = await fetch(URL + '/rest/v1/products?select=*', { headers: headers });
                 if (!res.ok) {
-                    const errText = await res.text();
-                    grid.innerHTML = `<p style="color:red;">এরর (${res.status}): ${errText}</p>`;
+                    grid.innerHTML = '<p style="color:red;">পণ্য লোড করতে সমস্যা হয়েছে।</p>';
                     return;
                 }
                 allProducts = await res.json();
-                if (!allProducts || allProducts.length === 0) {
-                    grid.innerHTML = '<p>ডাটাবেজে কোনো পণ্য পাওয়া যায়নি।</p>';
-                    return;
-                }
                 renderProducts(allProducts);
             } catch (e) {
-                grid.innerHTML = `<p style="color:red;">নেটওয়ার্ক সমস্যা: ${e.message}</p>`;
+                grid.innerHTML = '<p style="color:red;">নেটওয়ার্ক সমস্যা: ' + e.message + '</p>';
             }
         }
 
-            function renderProducts(list) {
+        function renderProducts(list) {
             const grid = document.getElementById('pos-product-grid');
             grid.innerHTML = '';
-            list.forEach(p => {
+            list.forEach(function (p) {
                 const title = p.title || p.name || 'পণ্য';
                 const price = Number(p.price || 0);
-                // আপনার ডাটাবেজের আসল দাম (old_price বা original_price বা regular_price) চেক করা
                 const oldPrice = Number(p.old_price || p.original_price || p.regular_price || 0);
                 const img = p.image || p.image_url || 'https://placeholder.com';
-                
+
                 let discountBadge = '';
-                let priceHtml = `<div class="product-price">৳${price}</div>`;
+                let priceHtml = '<div class="product-price">৳' + price + '</div>';
 
                 if (oldPrice > price) {
                     const percent = Math.round(((oldPrice - price) / oldPrice) * 100);
-                    discountBadge = `<div style="position:absolute; top:6px; left:6px; background:#d32f2f; color:#fff; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔥 ${percent}% ছাড়</div>`;
-                    priceHtml = `<div class="product-price"><del style="color:#888; font-size:12px; margin-right:4px;">৳${oldPrice}</del>৳${price}</div>`;
+                    discountBadge = '<div style="position:absolute; top:6px; left:6px; background:#d32f2f; color:#fff; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px;">🔥 ' + percent + '% ছাড়</div>';
+                    priceHtml = '<div class="product-price"><del style="color:#888; font-size:12px; margin-right:4px;">৳' + oldPrice + '</del>৳' + price + '</div>';
                 }
 
                 const card = document.createElement('div');
                 card.className = 'product-card';
-                card.style.position = 'relative';
-                card.innerHTML = `
-                    ${discountBadge}
-                    <img src="${img}" alt="${title}" onerror="this.src='https://placeholder.com'">
-                    <div class="product-title">${title}</div>
-                    ${priceHtml}
-                `;
-                card.onclick = () => addToCart(p);
+                card.style.cssText = 'position:relative; user-select:none; cursor:pointer;';
+                card.innerHTML = discountBadge +
+                    '<img src="' + img + '" alt="' + title + '" onerror="this.src=\'https://placeholder.com\'">' +
+                    '<div class="product-title">' + title + '</div>' +
+                    priceHtml;
+
+                card.onclick = function () {
+                    addToCart(p);
+                };
                 grid.appendChild(card);
             });
         }
+
+        function filterProducts() {
+            const q = document.getElementById('pos-search').value.toLowerCase();
+            const filtered = allProducts.filter(function (p) {
+                return (p.title || p.name || '').toLowerCase().includes(q);
+            });
+            renderProducts(filtered);
+        }
+
+        function addToCart(prod) {
+            const title = prod.title || prod.name;
+            const existing = cart.find(function (item) { return item.title === title; });
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ id: prod.id, title: title, price: Number(prod.price), quantity: 1 });
+            }
+            renderCart();
+        }
+
         function renderCart() {
             const tbody = document.getElementById('pos-cart-body');
             tbody.innerHTML = '';
-            cart.forEach((item, idx) => {
+            cart.forEach(function (item, idx) {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${item.title}</strong></td>
-                    <td>৳${item.price}</td>
-                    <td><input type="number" class="qty-input" min="1" value="${item.quantity}" oninput="setQty(${idx}, this.value)"></td>
-                    <td><strong>৳${item.price * item.quantity}</strong></td>
-                    <td><button onclick="removeItem(${idx})" style="border:none; background:#ffebee; color:#d32f2f; border-radius:4px; cursor:pointer; padding:3px 6px;">✕</button></td>
-                `;
+                tr.innerHTML =
+                    '<td><strong>' + item.title + '</strong></td>' +
+                    '<td>৳' + item.price + '</td>' +
+                    '<td><input type="number" class="qty-input" min="1" value="' + item.quantity + '" oninput="setQty(' + idx + ', this.value)"></td>' +
+                    '<td><strong>৳' + (item.price * item.quantity) + '</strong></td>' +
+                    '<td><button type="button" onclick="removeItem(' + idx + ')" style="border:none; background:#ffebee; color:#d32f2f; border-radius:4px; cursor:pointer; padding:3px 6px;">✕</button></td>';
                 tbody.appendChild(tr);
             });
             updateSummary();
@@ -214,7 +228,7 @@
         }
 
         function updateSummary() {
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const subtotal = cart.reduce(function (sum, item) { return sum + (item.price * item.quantity); }, 0);
             const discount = Number(document.getElementById('pos-discount').value) || 0;
             const total = Math.max(0, subtotal - discount);
             const paid = Number(document.getElementById('pos-paid').value) || 0;
@@ -233,18 +247,18 @@
             const modules = 25, cell = size / (modules + 2);
             ctx.fillStyle = '#000';
             function finder(r, c) {
-                ctx.fillRect((c+1)*cell, (r+1)*cell, 7*cell, 7*cell);
-                ctx.fillStyle = '#fff'; ctx.fillRect((c+2)*cell, (r+2)*cell, 5*cell, 5*cell);
-                ctx.fillStyle = '#000'; ctx.fillRect((c+3)*cell, (r+3)*cell, 3*cell, 3*cell);
+                ctx.fillRect((c + 1) * cell, (r + 1) * cell, 7 * cell, 7 * cell);
+                ctx.fillStyle = '#fff'; ctx.fillRect((c + 2) * cell, (r + 2) * cell, 5 * cell, 5 * cell);
+                ctx.fillStyle = '#000'; ctx.fillRect((c + 3) * cell, (r + 3) * cell, 3 * cell, 3 * cell);
             }
-            finder(0,0); finder(0, modules-7); finder(modules-7, 0);
+            finder(0, 0); finder(0, modules - 7); finder(modules - 7, 0);
             let hash = 2166136261;
             for (let i = 0; i < text.length; i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); }
             for (let r = 0; r < modules; r++) {
                 for (let c = 0; c < modules; c++) {
-                    if ((r<8&&c<8)||(r<8&&c>=modules-8)||(r>=modules-8&&c<8)) continue;
-                    const bit = ((hash ^ ((text.charCodeAt((r*modules+c)%text.length)||1)*(r+1)*(c+3))) >>> ((r+c)%16)) & 1;
-                    if (bit) ctx.fillRect((c+1)*cell, (r+1)*cell, cell, cell);
+                    if ((r < 8 && c < 8) || (r < 8 && c >= modules - 8) || (r >= modules - 8 && c < 8)) continue;
+                    const bit = ((hash ^ ((text.charCodeAt((r * modules + c) % text.length) || 1) * (r + 1) * (c + 3))) >>> ((r + c) % 16)) & 1;
+                    if (bit) ctx.fillRect((c + 1) * cell, (r + 1) * cell, cell, cell);
                 }
             }
             return canvas.toDataURL('image/png');
@@ -262,17 +276,28 @@
             const discount = Number(document.getElementById('pos-discount').value) || 0;
 
             try {
-                const res = await fetch(`${URL}/rest/v1/orders`, {
+                // ডাটাবেজের সঠিক কলামের নাম অটোমেটিক চেক করে নেওয়া
+                const checkRes = await fetch(URL + '/rest/v1/orders?limit=1', { headers: headers });
+                const sampleRows = checkRes.ok ? await checkRes.json() : [];
+                const sample = sampleRows.shift() || {};
+
+                const orderPayload = {
+                    customer_name: custName,
+                    delivery_address: 'দোকান কাউন্টার (POS) - ' + custPhone,
+                    items: cart,
+                    total_amount: total,
+                    status: 'Completed'
+                };
+
+                // ফোনের কলামটি যে নামে আছে (phone / mobile / customer_mobile) তাতে বসানো
+                if ('phone' in sample) orderPayload.phone = custPhone;
+                else if ('mobile' in sample) orderPayload.mobile = custPhone;
+                else if ('customer_mobile' in sample) orderPayload.customer_mobile = custPhone;
+
+                const res = await fetch(URL + '/rest/v1/orders', {
                     method: 'POST',
                     headers: headers,
-                    body: JSON.stringify({
-                        customer_name: custName,
-                        customer_phone: custPhone,
-                        delivery_address: 'দোকান কাউন্টার (POS)',
-                        items: cart,
-                        total_amount: total,
-                        status: 'Completed'
-                    })
+                    body: JSON.stringify(orderPayload)
                 });
 
                 btn.innerText = '🖨️ বিল সম্পন্ন ও প্রিন্ট';
@@ -300,10 +325,12 @@
 
         function printPOSReceipt(id, name, phone, items, total, discount) {
             const topQR = createQR(SHOP_LINK, 120);
-            const bottomQR = createQR(`Khan Super Shop | Memo: #${id} | Name: ${name} | Total: ৳${total}`, 140);
-            const rows = items.map((it, i) => `<tr><td>${i+1}. ${it.title}</td><td style="text-align:center;">${it.quantity}</td><td style="text-align:right;">৳${it.price * it.quantity}</td></tr>`).join('');
+            const bottomQR = createQR('Khan Super Shop | Memo: #' + id + ' | Name: ' + name + ' | Total: ৳' + total, 140);
+            const rows = items.map(function (it, i) {
+                return '<tr><td>' + (i + 1) + '. ' + it.title + '</td><td style="text-align:center;">' + it.quantity + '</td><td style="text-align:right;">৳' + (it.price * it.quantity) + '</td></tr>';
+            }).join('');
 
-                        const w = window.open('', '_blank');
+            const w = window.open('', '_blank');
             const receiptHtml = '<html><head><title>POS Memo #' + id + '</title></head>' +
                 '<body style="font-family:sans-serif; max-width:340px; margin:10px auto; border:2px solid #2e7d32; padding:12px; border-radius:8px;">' +
                 '<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #2e7d32; padding-bottom:8px;">' +
@@ -334,7 +361,7 @@
 
             w.document.write(receiptHtml);
             w.document.close();
-            setTimeout(() => { w.print(); }, 250);
+            setTimeout(function () { w.print(); }, 250);
         }
 
         loadPOSProducts();
