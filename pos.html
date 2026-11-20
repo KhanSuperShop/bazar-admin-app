@@ -108,9 +108,9 @@
             </div>
         </div>
     </div>
-    <script>
-        const URL = "https://kuecacvhadqzywvkmauo.supabase.co";
-        const KEY = "sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI";
+        <script>
+        const URL = 'https://kuecacvhadqzywvkmauo.supabase.co';
+        const KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
         const SHOP_LINK = 'https://github.io';
         const headers = {
             'apikey': KEY,
@@ -123,14 +123,22 @@
         let cart = [];
 
         async function loadPOSProducts() {
+            const grid = document.getElementById('pos-product-grid');
             try {
                 const res = await fetch(`${URL}/rest/v1/products?select=*`, { headers });
-                if (res.ok) {
-                    allProducts = await res.json();
-                    renderProducts(allProducts);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    grid.innerHTML = `<p style="color:red;">এরর (${res.status}): ${errText}</p>`;
+                    return;
                 }
+                allProducts = await res.json();
+                if (!allProducts || allProducts.length === 0) {
+                    grid.innerHTML = '<p>ডাটাবেজে কোনো পণ্য পাওয়া যায়নি।</p>';
+                    return;
+                }
+                renderProducts(allProducts);
             } catch (e) {
-                document.getElementById('pos-product-grid').innerHTML = '<p style="color:red;">পণ্য লোড করতে সমস্যা হয়েছে।</p>';
+                grid.innerHTML = `<p style="color:red;">নেটওয়ার্ক সমস্যা: ${e.message}</p>`;
             }
         }
 
@@ -144,7 +152,7 @@
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
-                    <img src="${img}" alt="${title}">
+                    <img src="${img}" alt="${title}" onerror="this.src='https://placeholder.com'">
                     <div class="product-title">${title}</div>
                     <div class="product-price">৳${price}</div>
                 `;
@@ -299,38 +307,41 @@
             const bottomQR = createQR(`Khan Super Shop | Memo: #${id} | Name: ${name} | Total: ৳${total}`, 140);
             const rows = items.map((it, i) => `<tr><td>${i+1}. ${it.title}</td><td style="text-align:center;">${it.quantity}</td><td style="text-align:right;">৳${it.price * it.quantity}</td></tr>`).join('');
 
-            const w = window.open('', '_blank');
-            w.document.write(`
-                <html><head><title>POS Memo #${id}</title></head>
-                <body style="font-family:sans-serif; max-width:340px; margin:10px auto; border:2px solid #2e7d32; padding:12px; border-radius:8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #2e7d32; padding-bottom:8px;">
-                        <div>
-                            <h2 style="margin:0; color:#2e7d32; font-size:18px;">খান সুপার শপ</h2>
-                            <div style="font-size:11px; color:#555;">POS ক্যাশ মেমো #${id}</div>
-                            <div style="font-size:10px; color:#666;">${new Date().toLocaleString('bn-BD')}</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <img src="${topQR}" style="width:55px; height:55px; border:1px solid #ccc; padding:2px;">
-                            <div style="font-size:7px; color:#2e7d32; font-weight:bold;">অনলাইন শপ</div>
-                        </div>
-                    </div>
-                    <div style="font-size:12px; margin:8px 0;">
-                        <strong>গ্রাহক:</strong> ${name} (${phone})
-                    </div>
-${rows}
+                        const w = window.open('', '_blank');
+            const receiptHtml = '<html><head><title>POS Memo #' + id + '</title></head>' +
+                '<body style="font-family:sans-serif; max-width:340px; margin:10px auto; border:2px solid #2e7d32; padding:12px; border-radius:8px;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #2e7d32; padding-bottom:8px;">' +
+                '<div>' +
+                '<h2 style="margin:0; color:#2e7d32; font-size:18px;">খান সুপার শপ</h2>' +
+                '<div style="font-size:11px; color:#555;">POS ক্যাশ মেমো #' + id + '</div>' +
+                '<div style="font-size:10px; color:#666;">' + new Date().toLocaleString('bn-BD') + '</div>' +
+                '</div>' +
+                '<div style="text-align:center;">' +
+                '<img src="' + topQR + '" style="width:55px; height:55px; border:1px solid #ccc; padding:2px;">' +
+                '<div style="font-size:7px; color:#2e7d32; font-weight:bold;">অনলাইন শপ</div>' +
+                '</div>' +
+                '</div>' +
+                '<div style="font-size:12px; margin:8px 0;"><strong>গ্রাহক:</strong> ' + name + ' (' + phone + ')</div>' +
+                '<table style="width:100%; border-collapse:collapse; font-size:12px; border-top:1px dashed #999; border-bottom:1px dashed #999;">' +
+                '<thead><tr style="border-bottom:1px solid #ddd;"><th style="text-align:left;">পণ্য</th><th>পরিমাণ</th><th style="text-align:right;">দাম</th></tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+                '</table>' +
+                '<div style="text-align:right; font-size:13px; margin-top:8px;">' +
+                (discount > 0 ? '<div>ছাড় (Discount): -৳' + discount + '</div>' : '') +
+                '<div style="font-size:16px; font-weight:bold; color:#d32f2f;">সর্বমোট বিল: ৳' + total + ' টাকা</div>' +
+                '</div>' +
+                '<div style="text-align:center; margin-top:12px; border-top:1px dashed #ccc; padding-top:8px;">' +
+                '<img src="' + bottomQR + '" style="width:72px; height:72px; border:1px solid #ddd; padding:2px;">' +
+                '<div style="font-size:9px; color:#555; margin-top:2px;">অর্ডার যাচাই QR #' + id + '</div>' +
+                '</div>' +
+                '</body></html>';
 
-পণ্য	পরিমাণ	দাম
+            w.document.write(receiptHtml);
+            w.document.close();
+            setTimeout(() => { w.print(); }, 250);
+        }
 
-${discount > 0 ? <div>ছাড় (Discount): -৳${discount}</div> : ''}
-সর্বমোট বিল: ৳${total} টাকা
-
-
-
-অর্ডার যাচাই QR #${id}
-
-
-`);
-w.document.close();
-setTimeout(() => { w.print(); }, 250);
-}
-loadPOSProducts();
+        loadPOSProducts();
+    </script>
+</body>
+</html>
