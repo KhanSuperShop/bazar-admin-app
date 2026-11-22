@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ওজন-ভিত্তিক প্রাইস ট্যাগ জেনারেটর - খান সুপার শপ</title>
+  <script src="https://cloudflare.com"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 20px; color: #333; }
+    .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #2c3e50; margin-top: 0; }
+    label { font-weight: bold; display: block; margin-top: 12px; }
+    select, input, button { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
+    .btn-print { background: #2980b9; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .btn-print:hover { background: #1f6391; }
+    .sticker-box {
+      margin-top: 20px; border: 2px dashed #333; padding: 15px; text-align: center;
+      background: #fff; border-radius: 6px;
+    }
+    .st-shop { font-size: 14px; font-weight: bold; }
+    .st-title { font-size: 18px; font-weight: bold; margin: 5px 0; }
+    .st-details { font-size: 15px; margin-bottom: 5px; }
+    .st-price { font-size: 22px; font-weight: bold; color: #000; margin-bottom: 5px; }
+    .scale-info { background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 13px; margin-top: 15px; border: 1px solid #ffeeba; }
+    @page { margin: 0; }
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>⚖️ ওজন প্রাইস ট্যাগ জেনারেটর</h2>
+  
+  <label>১. পণ্য নির্বাচন করুন (১ কেজির দাম সেট করা থাকতে হবে):</label>
+  <select id="productSelect" onchange="calculateTag()">
+    <option value="">পণ্য লোড হচ্ছে...</option>
+  </select>
+
+  <label>২. ওজন লিখুন (গ্রামে - যেমন: 500, 250, 1000):</label>
+  <input type="number" id="weightInput" value="500" min="1" max="99999" oninput="calculateTag()">
+
+  <div id="printArea" class="sticker-box" style="display:none;">
+    <div class="st-shop">খান সুপার শপ</div>
+    <div class="st-title" id="stTitle">পণ্যের নাম</div>
+    <div class="st-details">ওজন: <span id="stWeight">500</span> গ্রাম | দর: ৳<span id="stRate">0</span>/কেজি</div>
+    <div class="st-price">মোট দাম: ৳<span id="stTotal">0</span></div>
+    <div id="barcodeContainer" style="margin-top:5px;">
+      <svg id="barcode"></svg>
+    </div>
+  </div>
+
+  <button class="btn-print" onclick="printSticker()">🖨 স্টিকার প্রিন্ট করুন</button>
+
+  <div class="scale-info" id="scaleHelper" style="display:none;">
+    <strong>💡 ডিজিটাল স্কেল সেটআপ তথ্য:</strong><br>
+    ডিজিটাল স্কেল মেশিন ব্যবহার করলে মেশিনে এই পণ্যের PLU কোড সেট করুন: <strong id="pluCode">0000</strong>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://kuecacvhadqzywvkmauo.supabase.co'; 
+  const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
+  let allProducts = [];
+
+  function populateDropdown(list) {
+    const select = document.getElementById("productSelect");
+    select.innerHTML = '<option value="">-- পণ্য বাছাই করুন --</option>';
+    list.forEach(p => {
+      select.innerHTML += `<option value="${p.id}">${p.title} (৳${p.price}/কেজি)</option>`;
+    });
+  }
+
+  async function loadProducts() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=title.asc`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      });
+      if (!res.ok) throw new Error("Server error");
+      allProducts = await res.json();
+      populateDropdown(allProducts);
+    } catch (e) {
+      // অনলাইনে সমস্যা হলে POS-এর সেভ করা পণ্য লোড করবে
+      const cached = JSON.parse(localStorage.getItem('pos_products') || '[]');
+      if (cached.length > 0) {
+        allProducts = cached;
+        populateDropdown(allProducts);
+      } else {
+        alert("পণ্য লোড হতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ চেক করুন।");
+      }
+    }
+  }
+
+  function calculateTag() {
+    const prodId = document.getElementById("productSelect").value;
+    const weightGrams = parseInt(document.getElementById("weightInput").value) || 0;
+    
+    if (!prodId || weightGrams <= 0) {
+      document.getElementById("printArea").style.display = "none";
+      document.getElementById("scaleHelper").style.display = "none";
+      return;
+    }
+
+    const product = allProducts.find(p => p.id == prodId);
+    const ratePerKg = Number(product.price) || 0;
+    const totalPrice = Math.round((ratePerKg / 1000) * weightGrams);
+
+    const paddedId = String(product.id).padStart(4, '0');
+    const paddedWeight = String(weightGrams).padStart(5, '0');
+    const weightBarcode = `20${paddedId}${paddedWeight}`;
+
+    document.getElementById("stTitle").innerText = product.title;
+    document.getElementById("stWeight").innerText = weightGrams;
+    document.getElementById("stRate").innerText = ratePerKg;
+    document.getElementById("stTotal").innerText = totalPrice;
+    document.getElementById("pluCode").innerText = paddedId;
+
+    document.getElementById("printArea").style.display = "block";
+    document.getElementById("scaleHelper").style.display = "block";
+
+    const container = document.getElementById("barcodeContainer");
+    if (typeof JsBarcode !== "undefined") {
+      container.innerHTML = '<svg id="barcode"></svg>';
+      JsBarcode("#barcode", weightBarcode, {
+        format: "CODE128",
+        width: 2,
+        height: 45,
+        displayValue: true,
+        fontSize: 14
+      });
+    } else {
+      let bars = '';
+      for (let i = 0; i < weightBarcode.length; i++) {
+        const w = (parseInt(weightBarcode[i]) % 3) + 1;
+        bars += `<span style="display:inline-block; width:${w}px; height:40px; background:#000; margin-right:2px;"></span>`;
+      }
+      container.innerHTML = `<div style="margin-top:5px;">${bars}</div><div style="font-family:monospace; font-size:15px; font-weight:bold; letter-spacing:2px;">${weightBarcode}</div>`;
+    }
+  }
+
+  function printSticker() {
+    const prodId = document.getElementById("productSelect").value;
+    if (!prodId) {
+      alert("আগে তালিকা থেকে একটি পণ্য নির্বাচন করুন!");
+      return;
+    }
+    window.print();
+  }
+
+  loadProducts();
+</script>
+<script src="weight-pos-addon.js"></script>
+</body>
+</html>
