@@ -521,37 +521,37 @@
     updateNetworkStatus();
     if (navigator.onLine) syncData();
     else renderProducts();
-        // Global Barcode Listener (মাউস দিয়ে সার্চ বক্সে ক্লিক না করলেও স্ক্যানার মেশিন কাজ করবে)
+         // Global Barcode Listener (সার্চ বক্সের বাইরে ক্লিক থাকলেও স্ক্যানার ও কিবোর্ড কাজ করবে)
     let barcodeBuffer = "";
     let barcodeTimer = null;
 
+    function bnToEnNumber(str) {
+      const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return str.replace(/[০-৯]/g, d => bn.indexOf(d));
+    }
+
     document.addEventListener("keydown", function(e) {
-      // যদি কোনো ইনপুট বক্সে (যেমন: ক্রেতার নাম, ডিসকাউন্ট, Qty) টাইপ করা হয়, তবে বাধা দেবে না
       const tag = e.target.tagName.toLowerCase();
       if (tag === "input" || tag === "textarea") return;
 
-      // স্ক্যানার মেশিন খুব দ্রুত অক্ষর পাঠিয়ে শেষে Enter চাপে
       if (e.key === "Enter") {
-        if (barcodeBuffer.length >= 2) {
+        if (barcodeBuffer.length >= 1) {
           e.preventDefault();
-          // যদি আগের মেমো খোলা থাকে তবে তা বন্ধ করে নতুন পণ্য যোগ করবে
           if (document.getElementById("receiptModal").style.display === "flex") {
             closeReceipt();
           }
-          addByBarcode(barcodeBuffer);
+          addByBarcode(bnToEnNumber(barcodeBuffer));
           barcodeBuffer = "";
         }
         return;
       }
 
-      // শুধুমাত্র সংখ্যা বা অক্ষরগুলো বাফারে জমা করা
       if (e.key.length === 1) {
         barcodeBuffer += e.key;
         clearTimeout(barcodeTimer);
-        // স্ক্যানার মেশিন সাধারণত ৫০-১০০ মিলিসেকেন্ডের মধ্যে সব সংখ্যা পাঠায়; মানুষ হাতে টাইপ করলে বাফার রিসেট হবে
         barcodeTimer = setTimeout(() => {
           barcodeBuffer = "";
-        }, 120);
+        }, 800); // ৮০০ মিলিসেকেন্ড সময় দেওয়া হয়েছে যাতে হাতে টাইপ করলেও কাজ করে
       }
     });
   </script>
