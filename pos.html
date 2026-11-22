@@ -105,6 +105,7 @@
       <div class="search-bar-group">
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 নাম বা বারকোড..." autofocus>
         <button class="scan-btn" onclick="startScanner()">📷 স্ক্যান</button>
+        <button onclick="openQuickSale()" style="background:#6a1b9a; color:white; border:none; padding:0 12px; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer; white-space:nowrap;">⚡ Quick</button>
       </div>
       <div id="reader-container">
         <div id="reader"></div>
@@ -131,6 +132,18 @@
       <div class="action-buttons">
         <button class="btn-clear" onclick="clearCart()">🗑️ মুছুন</button>
         <button class="btn-print" onclick="completeSale()">🖨️ বিল ও সেভ</button>
+      </div>
+    </div>
+  </div>
+  <!-- Quick Sale পপআপ বক্স -->
+  <div id="quickSaleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:998; justify-content:center; align-items:center;">
+    <div style="background:white; padding:18px; border-radius:8px; width:90%; max-width:300px; text-align:center;">
+      <h3 style="color:#6a1b9a; margin-bottom:10px;">⚡ Quick Sale (দ্রুত বিক্রি)</h3>
+      <input type="number" id="quickPriceInput" placeholder="পণ্যের দাম লিখুন (৳)" style="width:100%; padding:10px; margin-bottom:10px; border:2px solid #6a1b9a; border-radius:5px; font-size:15px;">
+      <input type="number" id="quickQtyInput" value="1" min="1" placeholder="পরিমাণ (Qty)" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:5px; font-size:15px;">
+      <div style="display:flex; gap:8px;">
+        <button onclick="closeQuickSale()" style="flex:1; background:#d32f2f; color:white; border:none; padding:9px; border-radius:5px; font-weight:bold; cursor:pointer;">বাতিল</button>
+        <button onclick="addQuickItem()" style="flex:2; background:#2e7d32; color:white; border:none; padding:9px; border-radius:5px; font-weight:bold; cursor:pointer;">✅ বিলে যোগ করুন</button>
       </div>
     </div>
   </div>
@@ -318,6 +331,36 @@
       document.getElementById("discountInput").value = 0;
       document.getElementById("paidInput").value = 0;
       renderCart();
+    }
+    let quickItemCount = 0;
+
+    function openQuickSale() {
+      document.getElementById("quickSaleModal").style.display = "flex";
+      document.getElementById("quickPriceInput").value = "";
+      document.getElementById("quickQtyInput").value = 1;
+      setTimeout(() => document.getElementById("quickPriceInput").focus(), 100);
+    }
+
+    function closeQuickSale() {
+      document.getElementById("quickSaleModal").style.display = "none";
+    }
+
+    function addQuickItem() {
+      const price = Number(document.getElementById("quickPriceInput").value);
+      const qty = Number(document.getElementById("quickQtyInput").value) || 1;
+      if (!price || price <= 0) return alert("সঠিক দাম লিখুন!");
+
+      quickItemCount += 1;
+      cart.push({
+        id: 'quick-' + Date.now(),
+        name: 'Item ' + quickItemCount,
+        price: price,
+        old_price: price,
+        qty: qty,
+        isQuick: true
+      });
+      renderCart();
+      closeQuickSale();
     }
 
     async function completeSale() {
