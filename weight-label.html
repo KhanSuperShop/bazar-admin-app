@@ -13,7 +13,6 @@
     .btn-print { background: #2980b9; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
     .btn-print:hover { background: #1f6391; }
     
-    /* 50mm x 30mm স্টিকারের সঠিক মাপ */
     .sticker-box {
       width: 50mm;
       height: 30mm;
@@ -85,7 +84,6 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
   let allProducts = [];
 
-  // বিল্ট-ইন স্ক্যানযোগ্য CODE128B জেনারেটর (কোনো ইন্টারনেট বা CDN ছাড়াই কাজ করবে)
   const C128_PATTERNS = [
     "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
     "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
@@ -101,7 +99,8 @@
   ];
 
   function renderCode128SVG(text) {
-    let codes =; // Start Code B
+    let codes = new Array(104);
+    codes =;
     let checksum = 104;
     for (let i = 0; i < text.length; i++) {
       const val = text.charCodeAt(i) - 32;
@@ -109,7 +108,7 @@
       checksum += val * (i + 1);
     }
     codes.push(checksum % 103);
-    codes.push(106); // Stop
+    codes.push(106);
 
     let bits = "";
     codes.forEach(c => {
