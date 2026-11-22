@@ -1,4 +1,7 @@
 (function() {
+  const ADDON_SB_URL = 'https://kuecacvhadqzywvkmauo.supabase.co';
+  const ADDON_SB_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
+
   const originalAddByBarcode = window.addByBarcode;
   const originalCompleteSale = window.completeSale;
 
@@ -45,7 +48,7 @@
     }
   };
 
-  // ২. বিল সেভ হওয়ার সময় ওজন অনুযায়ী অটোমেটিক stock এবং in_stock আপডেট
+  // ২. বিল সেভ হওয়ার সময় সরাসরি Supabase-এ স্টক কমানো
   if (typeof originalCompleteSale === "function") {
     window.completeSale = async function() {
       const soldItems = cart.map(item => ({ ...item }));
@@ -53,7 +56,7 @@
       // মূল বিল ও সেভ ফাংশন চালানো
       await originalCompleteSale.apply(this, arguments);
 
-      if (navigator.onLine && typeof SUPABASE_URL !== "undefined" && typeof SUPABASE_ANON_KEY !== "undefined") {
+      if (navigator.onLine) {
         const stockDeductions = {};
 
         soldItems.forEach(item => {
@@ -68,30 +71,27 @@
         });
 
         const headers = {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'apikey': ADDON_SB_KEY,
+          'Authorization': 'Bearer ' + ADDON_SB_KEY,
           'Content-Type': 'application/json'
         };
 
         for (const [prodId, totalDeduct] of Object.entries(stockDeductions)) {
           const product = products.find(p => p.id == prodId);
-          // যেসব পণ্যের stock কলামে সংখ্যা (NULL নয়) দেওয়া আছে শুধু সেগুলো আপডেট হবে
           if (product && product.stock !== null && product.stock !== undefined && product.stock !== "") {
             const currentStock = Number(product.stock);
             if (!isNaN(currentStock)) {
               const newStock = Math.max(0, Number((currentStock - totalDeduct).toFixed(3)));
-              const isInStock = newStock > 0;
-              
               product.stock = newStock;
-              product.in_stock = isInStock;
+              product.in_stock = newStock > 0;
 
               try {
-                await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${prodId}`, {
-                  method: 'PATCH',
+                await fetch(`${ADDON_SB_URL}/rest/v1/rpc/deduct_product_stock`, {
+                  method: 'POST',
                   headers: headers,
                   body: JSON.stringify({ 
-                    stock: newStock,
-                    in_stock: isInStock
+                    p_id: Number(prodId),
+                    deduct_qty: Number(totalDeduct.toFixed(3))
                   })
                 });
               } catch (err) {
