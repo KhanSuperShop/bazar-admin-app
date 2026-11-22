@@ -494,10 +494,23 @@
       localStorage.setItem('pos_pending_sales', JSON.stringify(pendingSales));
       updateNetworkStatus();
     }
-    function startScanner() {
+        function startScanner() {
       document.getElementById("reader-container").style.display = "block";
       html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (decodedText) => { addByBarcode(decodedText); stopScanner(); }, () => {}).catch(() => alert("ক্যামেরা চালু করা যাচ্ছে না।"));
+      const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+      
+      html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+        addByBarcode(decodedText);
+        stopScanner();
+      }, () => {}).catch(() => {
+        html5QrCode.start({ facingMode: "user" }, config, (decodedText) => {
+          addByBarcode(decodedText);
+          stopScanner();
+        }, () => {}).catch(() => {
+          alert("ক্যামেরা পাওয়া যায়নি বা ব্রাউজারে পারমিশন ব্লক করা আছে!");
+          document.getElementById("reader-container").style.display = "none";
+        });
+      });
     }
 
     function stopScanner() {
