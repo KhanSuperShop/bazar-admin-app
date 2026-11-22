@@ -84,7 +84,7 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
   let allProducts = [];
 
-  const C128_PATTERNS = [
+  const C128_PATTERNS = Array.of(
     "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
     "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
     "221231","213212","223112","312131","311222","321122","321221","312212","322112","322211",
@@ -96,11 +96,10 @@
     "111242","121142","121241","114212","124112","124211","411212","421112","421211","212141",
     "214121","412121","111143","111341","131141","114113","114311","411113","411311","113141",
     "114131","311141","411131","211412","211214","211232","2331112"
-  ];
+  );
 
   function renderCode128SVG(text) {
-    let codes = new Array(104);
-    codes =;
+    let codes = Array.of(104);
     let checksum = 104;
     for (let i = 0; i < text.length; i++) {
       const val = text.charCodeAt(i) - 32;
@@ -112,15 +111,15 @@
 
     let bits = "";
     codes.forEach(c => {
-      const pat = C128_PATTERNS[c];
+      const pat = C128_PATTERNS.at(c);
       for (let i = 0; i < pat.length; i++) {
-        bits += (i % 2 === 0 ? "1" : "0").repeat(parseInt(pat[i], 10));
+        bits += (i % 2 === 0 ? "1" : "0").repeat(parseInt(pat.charAt(i), 10));
       }
     });
 
     let rects = "";
     for (let i = 0; i < bits.length; i++) {
-      if (bits[i] === "1") {
+      if (bits.charAt(i) === "1") {
         rects += `<rect x="${i}" y="0" width="1" height="26" fill="#000"/>`;
       }
     }
