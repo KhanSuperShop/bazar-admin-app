@@ -38,7 +38,6 @@
     
     .scale-info { background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 12px; margin-top: 15px; border: 1px solid #ffeeba; }
 
-    /* প্রিন্ট সেটিংস: হুবহু 50mm x 30mm পেপারের জন্য */
     @page {
       size: 50mm 30mm;
       margin: 0;
@@ -65,7 +64,7 @@
 <div class="container">
   <h2>⚖️ প্রাইস ট্যাগ জেনারেটর (50x30mm)</h2>
   
-  <label>১. পণ্য নির্বাচন করুন (১ কেজির দাম সেট থাকতে হবে):</label>
+  <label>১. পণ্য নির্বাচন করুন (১ কেজির দাম সেট করা থাকতে হবে):</label>
   <select id="productSelect" onchange="calculateTag()">
     <option value="">পণ্য লোড হচ্ছে...</option>
   </select>
@@ -137,7 +136,6 @@
     const ratePerKg = Number(product.price) || 0;
     const totalPrice = Math.round((ratePerKg / 1000) * weightGrams);
 
-    // ১২ সংখ্যার স্ট্যান্ডার্ড বারকোড: 20 + 4 ডিজিট ID + 5 ডিজিট ওজন + 0 (মোট ১২ সংখ্যা)
     const paddedId = String(product.id).padStart(4, '0');
     const paddedWeight = String(weightGrams).padStart(5, '0');
     const weightBarcode = `20${paddedId}${paddedWeight}0`;
@@ -176,7 +174,7 @@
   }
 
   loadProducts();
-  <script src="weight-pos-addon.js"></script>
 </script>
+<script src="weight-pos-addon.js"></script>
 </body>
 </html>
