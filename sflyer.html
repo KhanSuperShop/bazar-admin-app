@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>খান সুপার শপ - কালি সাশ্রয়ী অফার ফ্লায়ার</title>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        @import url('https://googleapis.com');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+
+        body {
+            background-color: #dcdcdc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+        }
+
+        /* ওপরের কন্ট্রোল বার (প্রিন্টে আসবে না) */
+        .controls {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 210mm;
+            width: 100%;
+        }
+
+        .controls button, .controls select {
+            border: none;
+            padding: 7px 12px;
+            font-size: 13.5px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-add { background: #ff9800; color: #000; }
+        .btn-save { background: #007bff; color: #fff; }
+        .btn-img { background: #9c27b0; color: #fff; }
+        .btn-print { background: #28a745; color: #fff; }
+        .btn-thermal { background: #00bcd4; color: #000; }
+        .btn-reset { background: #dc3545; color: #fff; }
+        .theme-select { background: #333; color: #ffeb3b; border: 1px solid #555; }
+
+        .controls button:hover { opacity: 0.9; transform: scale(1.02); }
+
+        /* A4 পেজ ডিজাইন (ডিফল্ট: কালি সাশ্রয়ী সাদা থিম) */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background: #ffffff;
+            border: 4px solid #d50000;
+            padding: 8mm;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* রঙিন থিম অপশনসমূহ (যদি কখনো দরকার হয়) */
+        .a4-page.theme-red {
+            background: radial-gradient(circle at top, #d32f2f 0%, #880e4f 65%, #4a001f 100%);
+            border: none;
+        }
+        .a4-page.theme-green {
+            background: radial-gradient(circle at top, #2e7d32 0%, #1b5e20 65%, #003300 100%);
+            border: none;
+        }
+
+        /* ওপরের হেডার অংশ (সাদা থিমেও কালি কম লাগবে) */
+        .header {
+            text-align: center;
+            background: #fffde7;
+            border: 3px solid #d50000;
+            border-radius: 14px;
+            padding: 8px 15px;
+            position: relative;
+        }
+
+        .header-top-tag {
+            background: #d50000;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 2px 15px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+
+        .header h1 {
+            font-size: 44px;
+            color: #d50000;
+            line-height: 1.05;
+            font-weight: 700;
+        }
+
+        .offer-date {
+            background: #212121;
+            color: #ffffff;
+            display: inline-block;
+            padding: 3px 18px;
+            border-radius: 20px;
+            font-size: 14.5px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* প্রোডাক্ট গ্রিড */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 8px 0;
+            flex-grow: 1;
+        }
+
+        .product-card {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 2px solid #bdbdbd;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            text-align: center;
+        }
+
+        .delete-card-btn {
+            position: absolute;
+            bottom: 32px;
+            left: 4px;
+            background: rgba(220, 53, 69, 0.85);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            padding: 1px 5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 5;
+        }
+
+        .product-card:hover .delete-card-btn { opacity: 1; }
+
+        /* ডিসকাউন্ট ব্যাজ */
+        .discount-tag {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: #fff9c4;
+            color: #d50000;
+            border: 1.5px solid #d50000;
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 2;
+        }
+
+        /* প্রাইস ট্যাগ */
+        .price-box {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #d50000;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 2px 7px;
+            text-align: right;
+            z-index: 2;
+        }
+
+        .old-price {
+            font-size: 11px;
+            color: #ffcdd2;
+            text-decoration: line-through;
+            display: block;
+            line-height: 1;
+        }
+
+        .new-price {
+            font-size: 19px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.1;
+            display: block;
+        }
+
+        /* পণ্যের ছবি */
+        .img-container {
+            width: 100%;
+            height: 108px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            margin-top: 12px;
+            border-radius: 6px;
+        }
+
+        .img-container img {
+            max-width: 92%;
+            max-height: 95%;
+            object-fit: contain;
+        }
+
+        .img-hint {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+
+        .img-container:hover .img-hint { opacity: 1; }
+
+        .product-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111;
+            width: 100%;
+            background: #f5f5f5;
+            border-top: 1.5px solid #ddd;
+            border-radius: 0 0 6px 6px;
+            padding: 3px 4px;
+            line-height: 1.15;
+        }
+
+        /* নিচের ফুটার অংশ */
+        .footer {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2.5px solid #2e7d32;
+            gap: 10px;
+        }
+
+        .shop-logo {
+            width: 55px;
+            height: 55px;
+            border-radius: 8px;
+            border: 1.5px dashed #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .shop-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+        .shop-info { flex-grow: 1; }
+        .shop-info h2 { color: #b71c1c; font-size: 26px; line-height: 1.05; }
+        .shop-info p { color: #222; font-size: 13px; font-weight: 600; }
+
+        .qr-box {
+            width: 56px;
+            height: 56px;
+            border: 1.5px dashed #888;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .qr-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .contact-box {
+            background: #1b5e20;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .contact-box span { display: block; font-size: 12px; color: #c8e6c9; }
+        .contact-box strong { font-size: 18px; display: block; line-height: 1.2; }
+
+        [contenteditable="true"]:hover {
+            outline: 2px dashed #007bff;
+            background-color: rgba(255, 255, 0, 0.3);
+            cursor: text;
+        }
+
+        /* থার্মাল প্রিন্টারের রিসিট ভিউ (শুধু থার্মাল প্রিন্টের সময় দেখাবে) */
+        #thermalReceipt { display: none; }
+
+        /* সাধারণ A4 প্রিন্ট সেটিংস */
+        @media print {
+            body { background: none; padding: 0; }
+            .controls, .img-hint, .delete-card-btn { display: none !important; }
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            @page { size: A4 portrait; margin: 0; }
+
+            /* যখন থার্মাল প্রিন্ট বাটন চাপা হবে */
+            body.thermal-mode .a4-page { display: none !important; }
+            body.thermal-mode #thermalReceipt {
+                display: block !important;
+                width: 76mm;
+                padding: 2mm;
+                color: #000;
+                font-size: 13px;
+            }
+            body.thermal-mode @page { size: 80mm auto; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <select class="theme-select" onchange="changeTheme(this.value)">
+            <option value="default">🖨️ থিম: কালি সাশ্রয়ী সাদা (Eco)</option>
+            <option value="theme-red">🎨 থিম: লাল ধামাকা</option>
+            <option value="theme-green">🎨 থিম: সবুজ ফ্রেশ</option>
+        </select>
+        <button class="btn-add" onclick="addNewProduct()">➕ পণ্য যোগ</button>
+        <button class="btn-save" onclick="saveData()">💾 সেভ</button>
+        <button class="btn-img" onclick="downloadAsImage()">🖼️ ছবি (PNG)</button>
+        <button class="btn-print" onclick="printA4()">🖨️ A4 প্রিন্ট</button>
+        <button class="btn-thermal" onclick="printThermal()">🧾 থার্মাল রিসিট প্রিন্ট</button>
+        <button class="btn-reset" onclick="resetAll()">🔄 রিসেট</button>
+    </div>
+
+    <input type="file" id="imageUploader" accept="image/*" style="display: none;">
+
+    <!-- থার্মাল রিসিট প্রিন্টের জায়গা -->
+    <div id="thermalReceipt"></div>
+
+    <!-- A4 ফ্লায়ার পেজ -->
+    <div class="a4-page" id="flyerPage">
+        <div class="header">
+            <div class="header-top-tag" contenteditable="true">খান সুপার শপ — স্পেশাল ডিল</div>
+            <h1 contenteditable="true">FRIDAY ধামাকা অফার!</h1>
+            <div class="offer-date" contenteditable="true">অফার চলবে: ১৬, ১৭ ও ১৮ নভেম্বর ২০২৬ (শুক্র, শনি ও রবি)</div>
+        </div>
+
+        <div class="product-grid" id="productGrid"></div>
+
+        <div class="footer">
+            <div class="shop-logo" onclick="triggerUpload(this)" title="দোকানের লোগো বসাতে ক্লিক করুন">
+                <img id="shopLogoImg" alt="Logo">
+            </div>
+            <div class="shop-info">
+                <h2 contenteditable="true" id="shopTitle">খান সুপার শপ</h2>
+                <p contenteditable="true" id="shopSub">বিশ্বস্ততার সাথে সেরা মানের পণ্য | প্রতিদিন সকাল ৮টা - রাত ১১টা</p>
+                <p contenteditable="true" style="color: #b71c1c; font-size: 12px;">* স্টক থাকা সাপেক্ষে অফারটি প্রযোজ্য।</p>
+            </div>
+            <div class="qr-box" onclick="triggerUpload(this)" title="QR কোড বদলাতে ক্লিক করুন">
+                <img id="shopQrImg" alt="QR">
+            </div>
+            <div class="contact-box">
+                <span contenteditable="true">হোম ডেলিভারি ও WhatsApp</span>
+                <strong contenteditable="true" id="shopPhone">📞 ০১৭০০-০০০০০০</strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='120' height='90' viewBox='0 0 120 90'><rect width='120' height='90' rx='8' fill='%23f1f5f9'/><path d='M35 65 L52 45 L65 58 L78 40 L90 65 Z' fill='%2394a3b8'/><circle cx='45' cy='32' r='7' fill='%23f59e0b'/><text x='60' y='80' font-family='sans-serif' font-size='11' fill='%23475569' text-anchor='middle'>ছবি দিতে ক্লিক করুন</text></svg>";
+        const logoPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='60' height='60' viewBox='0 0 60 60'><rect width='60' height='60' fill='%23fff8e1'/><text x='30' y='34' font-family='sans-serif' font-size='12' font-weight='bold' fill='%23b71c1c' text-anchor='middle'>LOGO</text></svg>";
+        const qrPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='60' height='60' viewBox='0 0 60 60'><rect width='60' height='60' fill='%23ffffff'/><rect x='10' y='10' width='15' height='15' fill='%23000'/><rect x='35' y='10' width='15' height='15' fill='%23000'/><rect x='10' y='35' width='15' height='15' fill='%23000'/><rect x='35' y='35' width='15' height='15' fill='%23000'/></svg>";
+
+        document.getElementById('shopLogoImg').src = logoPlaceholder;
+        document.getElementById('shopQrImg').src = qrPlaceholder;
+
+        const defaultProducts = [
+            { name: "দেশি পেঁয়াজ ১ কেজি", oldPrice: "১২০ ৳", newPrice: "১১০ ৳", discount: "ছাড় ১০৳", img: placeholderImg },
+            { name: "সয়াবিন তেল ৫ লিটার", oldPrice: "৮৫০ ৳", newPrice: "৮২০ ৳", discount: "ছাড় ৩০৳", img: placeholderImg },
+            { name: "মিনিকেট চাল ৫ কেজি", oldPrice: "৩৬০ ৳", newPrice: "৩৪০ ৳", discount: "ছাড় ২০৳", img: placeholderImg },
+            { name: "মসুর ডাল ১ কেজি", oldPrice: "১১৫ ৳", newPrice: "১০৫ ৳", discount: "ছাড় ১০৳", img: placeholderImg },
+            { name: "মরিচ গুঁড়া ২০০ গ্রাম", oldPrice: "১০০ ৳", newPrice: "৯০ ৳", discount: "১০% ছাড়", img: placeholderImg },
+            { name: "ধনে গুঁড়া ২০০ গ্রাম", oldPrice: "৭০ ৳", newPrice: "৬০ ৳", discount: "ছাড় ১০৳", img: placeholderImg },
+            { name: "প্যাকেট চিনি ১ কেজি", oldPrice: "১৪০ ৳", newPrice: "১৩০ ৳", discount: "ছাড় ১০৳", img: placeholderImg },
+            { name: "গুঁড়া দুধ ৫০০ গ্রাম", oldPrice: "৪২০ ৳", newPrice: "৩৯০ ৳", discount: "ছাড় ৩০৳", img: placeholderImg },
+            { name: "ডিটারজেন্ট পাউডার ২ কেজি", oldPrice: "২৩০ ৳", newPrice: "২১০ ৳", discount: "ছাড় ২০৳", img: placeholderImg },
+            { name: "গোসলের সাবান (৩টি প্যাক)", oldPrice: "১৬০ ৳", newPrice: "১৪৫ ৳", discount: "ছাড় ১৫৳", img: placeholderImg },
+            { name: "নুডুলস ফ্যামিলি প্যাক", oldPrice: "১৭০ ৳", newPrice: "১৫০ ৳", discount: "ছাড় ২০৳", img: placeholderImg },
+            { name: "লেবু ১ হালি (৪টি)", oldPrice: "৫০ ৳", newPrice: "৪০ ৳", discount: "২০% ছাড়", img: placeholderImg }
+        ];
+
+        const grid = document.getElementById('productGrid');
+        const uploader = document.getElementById('imageUploader');
+        let currentImgElement = null;
+
+        function createCardElement(item) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.innerHTML = `
+                <button class="delete-card-btn" onclick="this.parentElement.remove()" title="বক্সটি মুছুন">✖</button>
+                <div class="discount-tag" contenteditable="true">${item.discount}</div>
+                <div class="price-box">
+                    <span class="old-price" contenteditable="true">${item.oldPrice}</span>
+                    <span class="new-price" contenteditable="true">${item.newPrice}</span>
+                </div>
+                <div class="img-container" onclick="triggerUpload(this)">
+                    <img src="${item.img}" alt="Product">
+                    <span class="img-hint">ছবি বদলাতে ক্লিক করুন</span>
+                </div>
+                <div class="product-name" contenteditable="true">${item.name}</div>
+            `;
+            return card;
+        }
+
+        function loadProducts() {
+            grid.innerHTML = '';
+            const savedData = localStorage.getItem('khanSuperFlyerEco');
+            const products = savedData ? JSON.parse(savedData) : defaultProducts;
+            products.forEach(item => grid.appendChild(createCardElement(item)));
+        }
+
+        function addNewProduct() {
+            grid.appendChild(createCardElement({
+                name: "নতুন পণ্যের নাম",
+                oldPrice: "১০০ ৳",
+                newPrice: "৯০ ৳",
+                discount: "ছাড় ১০৳",
+                img: placeholderImg
+            }));
+        }
+
+        function triggerUpload(container) {
+            currentImgElement = container.querySelector('img');
+            uploader.click();
+        }
+
+        uploader.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && currentImgElement) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImgElement.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            uploader.value = '';
+        });
+
+        function changeTheme(themeName) {
+            const page = document.getElementById('flyerPage');
+            page.className = 'a4-page';
+            if (themeName !== 'default') page.classList.add(themeName);
+        }
+
+        function saveData() {
+            const cards = document.querySelectorAll('.product-card');
+            const updatedProducts = [];
+            cards.forEach(card => {
+                updatedProducts.push({
+                    discount: card.querySelector('.discount-tag').innerText,
+                    oldPrice: card.querySelector('.old-price').innerText,
+                    newPrice: card.querySelector('.new-price').innerText,
+                    img: card.querySelector('img').src,
+                    name: card.querySelector('.product-name').innerText
+                });
+            });
+            localStorage.setItem('khanSuperFlyerEco', JSON.stringify(updatedProducts));
+            alert('✅ সফলভাবে সেভ হয়েছে!');
+        }
+
+        function resetAll() {
+            if (confirm('সব তথ্য মুছে আগের অবস্থায় ফিরতে চান?')) {
+                localStorage.removeItem('khanSuperFlyerEco');
+                loadProducts();
+            }
+        }
+
+        function downloadAsImage() {
+            const flyer = document.getElementById('flyerPage');
+            html2canvas(flyer, { scale: 2, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Khan-Super-Shop-Offer.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function printA4() {
+            document.body.classList.remove('thermal-mode');
+            window.print();
+        }
+
+        function printThermal() {
+            const shopName = document.getElementById('shopTitle').innerText;
+            const phone = document.getElementById('shopPhone').innerText;
+            const offerDate = document.querySelector('.offer-date').innerText;
+            const cards = document.querySelectorAll('.product-card');
+
+            let html = `
+                <div style="text-align:center; border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 6px;">
+                    <h2 style="font-size:20px; margin:0;">${shopName}</h2>
+                    <p style="font-size:12px; font-weight:bold;">*** সাপ্তাহিক ধামাকা অফার ***</p>
+                    <p style="font-size:11px;">${offerDate}</p>
+                </div>
+                <table style="width:100%; border-collapse: collapse; font-size:12px;">
+                    <tr style="border-bottom: 1px solid #000;">
+                        <th style="text-align:left; padding:3px 0;">পণ্যের নাম</th>
+                        <th style="text-align:right; padding:3px 0;">অফার দাম</th>
+                    </tr>
+            `;
+
+            cards.forEach(card => {
+                const name = card.querySelector('.product-name').innerText;
+                const oldP = card.querySelector('.old-price').innerText;
+                const newP = card.querySelector('.new-price').innerText;
+                html += `
+                    <tr style="border-bottom: 1px dotted #888;">
+                        <td style="padding:4px 0;">${name}</td>
+                        <td style="text-align:right; padding:4px 0;">
+                            <span style="text-decoration:line-through; font-size:10px;">${oldP}</span><br>
+                            <strong style="font-size:14px;">${newP}</strong>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                </table>
+                <div style="text-align:center; border-top: 2px dashed #000; margin-top: 8px; padding-top: 5px; font-size:11px;">
+                    <p>হোম ডেলিভারি: <strong>${phone}</strong></p>
+                    <p>ধন্যবাদ, আবার আসবেন!</p>
+                </div>
+            `;
+
+            document.getElementById('thermalReceipt').innerHTML = html;
+            document.body.classList.add('thermal-mode');
+            window.print();
+            document.body.classList.remove('thermal-mode');
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
