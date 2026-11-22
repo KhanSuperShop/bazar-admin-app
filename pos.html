@@ -381,15 +381,19 @@
         ${savingsBannerHtml}
         <div style="text-align:center; margin-top:10px;">
           <div id="orderQrBox" style="display:inline-block;"></div>
-          <div style="font-size:10px; color:#666; margin-top:2px;">অর্ডার যাচাই QR #${memoCounter}</div>
+          <div style="font-size:10px; color:#555; margin-top:2px;">অর্ডার যাচাই QR #${memoCounter}</div>
+          <div style="font-size:12px; font-weight:bold; color:#2e7d32; margin-top:8px; border-top:1px dashed #ccc; padding-top:6px;">
+            🙏 খান সুপার শপে কেনাকাটা করার জন্য ধন্যবাদ! আবার আসবেন।
+          </div>
+        </div>
         </div>
       `;
 
-      if (window.QRCode) {
-        new QRCode(document.getElementById("shopQrBox"), { text: "https://github.io", width: 48, height: 48 });
-        new QRCode(document.getElementById("orderQrBox"), { text: `Memo-${memoCounter}-Total-${grandTotal}`, width: 65, height: 65 });
+            if (window.QRCode) {
+        const shopUrl = "https://khansupershop." + "github.io/bazar-admin-app/";
+        new QRCode(document.getElementById("shopQrBox"), { text: shopUrl, width: 48, height: 48 });
+        new QRCode(document.getElementById("orderQrBox"), { text: `Khan Super Shop | Memo #${memoCounter} | Total: Tk.${grandTotal}`, width: 65, height: 65 });
       }
-
       document.getElementById("receiptModal").style.display = "flex";
 
       const formattedItems = cart.map(item => ({
