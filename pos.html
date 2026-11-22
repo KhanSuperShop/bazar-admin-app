@@ -346,15 +346,15 @@
       document.getElementById("quickSaleModal").style.display = "none";
     }
 
-    function addQuickItem() {
+       function addQuickItem() {
       const price = Number(document.getElementById("quickPriceInput").value);
       const qty = Number(document.getElementById("quickQtyInput").value) || 1;
       if (!price || price <= 0) return alert("সঠিক দাম লিখুন!");
 
-      quickItemCount += 1;
+      const nextNum = cart.filter(item => item.isQuick).length + 1;
       cart.push({
         id: 'quick-' + Date.now(),
-        name: 'Item ' + quickItemCount,
+        name: 'Item ' + nextNum,
         price: price,
         old_price: price,
         qty: qty,
