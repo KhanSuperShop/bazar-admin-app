@@ -3,39 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ওজন-ভিত্তিক প্রাইস ট্যাগ জেনারেটর - খান সুপার শপ</title>
+  <title>ওজন প্রাইস ট্যাগ (50mm x 30mm) - খান সুপার শপ</title>
   <script src="https://cloudflare.com"></script>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 20px; color: #333; }
-    .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #2c3e50; margin-top: 0; }
-    label { font-weight: bold; display: block; margin-top: 12px; }
-    select, input, button { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
+    .container { max-width: 480px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #2c3e50; margin-top: 0; font-size: 20px; }
+    label { font-weight: bold; display: block; margin-top: 12px; font-size: 14px; }
+    select, input, button { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 15px; box-sizing: border-box; }
     .btn-print { background: #2980b9; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
     .btn-print:hover { background: #1f6391; }
+    
+    /* 50mm x 30mm স্টিকারের সঠিক মাপ */
     .sticker-box {
-      margin-top: 20px; border: 2px dashed #333; padding: 15px; text-align: center;
-      background: #fff; border-radius: 6px;
+      width: 50mm;
+      height: 30mm;
+      margin: 20px auto 0 auto;
+      border: 1px dashed #333;
+      padding: 1.5mm 2mm;
+      box-sizing: border-box;
+      text-align: center;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden;
     }
-    .st-shop { font-size: 14px; font-weight: bold; }
-    .st-title { font-size: 18px; font-weight: bold; margin: 5px 0; }
-    .st-details { font-size: 15px; margin-bottom: 5px; }
-    .st-price { font-size: 22px; font-weight: bold; color: #000; margin-bottom: 5px; }
-    .scale-info { background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 13px; margin-top: 15px; border: 1px solid #ffeeba; }
-    @page { margin: 0; }
+    .st-shop { font-size: 8px; font-weight: bold; line-height: 1; }
+    .st-title { font-size: 10.5px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46mm; line-height: 1.1; }
+    .st-details { font-size: 8.5px; line-height: 1.1; }
+    .st-price { font-size: 12px; font-weight: bold; color: #000; line-height: 1.1; }
+    #barcodeContainer svg { max-width: 46mm; height: auto; display: block; margin: 0 auto; }
+    
+    .scale-info { background: #fff3cd; padding: 10px; border-radius: 5px; font-size: 12px; margin-top: 15px; border: 1px solid #ffeeba; }
+
+    /* প্রিন্ট সেটিংস: হুবহু 50mm x 30mm পেপারের জন্য */
+    @page {
+      size: 50mm 30mm;
+      margin: 0;
+    }
     @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { width: 50mm; height: 30mm; margin: 0 !important; padding: 0 !important; background: #fff; }
       body * { visibility: hidden; }
       #printArea, #printArea * { visibility: visible; }
-      #printArea { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 10px; }
+      #printArea {
+        position: fixed;
+        left: 0;
+        top: 0;
+        margin: 0 !important;
+        border: none !important;
+        width: 50mm;
+        height: 30mm;
+      }
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>⚖️ ওজন প্রাইস ট্যাগ জেনারেটর</h2>
+  <h2>⚖️ প্রাইস ট্যাগ জেনারেটর (50x30mm)</h2>
   
-  <label>১. পণ্য নির্বাচন করুন (১ কেজির দাম সেট করা থাকতে হবে):</label>
+  <label>১. পণ্য নির্বাচন করুন (১ কেজির দাম সেট থাকতে হবে):</label>
   <select id="productSelect" onchange="calculateTag()">
     <option value="">পণ্য লোড হচ্ছে...</option>
   </select>
@@ -46,18 +76,17 @@
   <div id="printArea" class="sticker-box" style="display:none;">
     <div class="st-shop">খান সুপার শপ</div>
     <div class="st-title" id="stTitle">পণ্যের নাম</div>
-    <div class="st-details">ওজন: <span id="stWeight">500</span> গ্রাম | দর: ৳<span id="stRate">0</span>/কেজি</div>
-    <div class="st-price">মোট দাম: ৳<span id="stTotal">0</span></div>
-    <div id="barcodeContainer" style="margin-top:5px;">
+    <div class="st-details">ওজন: <span id="stWeight">500</span>g | দর: ৳<span id="stRate">0</span>/kg</div>
+    <div class="st-price">দাম: ৳<span id="stTotal">0</span></div>
+    <div id="barcodeContainer">
       <svg id="barcode"></svg>
     </div>
   </div>
 
-  <button class="btn-print" onclick="printSticker()">🖨 স্টিকার প্রিন্ট করুন</button>
+  <button class="btn-print" onclick="printSticker()">🖨 স্টিকার প্রিন্ট করুন (50x30mm)</button>
 
   <div class="scale-info" id="scaleHelper" style="display:none;">
-    <strong>💡 ডিজিটাল স্কেল সেটআপ তথ্য:</strong><br>
-    ডিজিটাল স্কেল মেশিন ব্যবহার করলে মেশিনে এই পণ্যের PLU কোড সেট করুন: <strong id="pluCode">0000</strong>
+    <strong>💡 ডিজিটাল স্কেল PLU কোড:</strong> <strong id="pluCode">0000</strong>
   </div>
 </div>
 
@@ -86,13 +115,10 @@
       allProducts = await res.json();
       populateDropdown(allProducts);
     } catch (e) {
-      // অনলাইনে সমস্যা হলে POS-এর সেভ করা পণ্য লোড করবে
       const cached = JSON.parse(localStorage.getItem('pos_products') || '[]');
       if (cached.length > 0) {
         allProducts = cached;
         populateDropdown(allProducts);
-      } else {
-        alert("পণ্য লোড হতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ চেক করুন।");
       }
     }
   }
@@ -111,9 +137,10 @@
     const ratePerKg = Number(product.price) || 0;
     const totalPrice = Math.round((ratePerKg / 1000) * weightGrams);
 
+    // ১২ সংখ্যার স্ট্যান্ডার্ড বারকোড: 20 + 4 ডিজিট ID + 5 ডিজিট ওজন + 0 (মোট ১২ সংখ্যা)
     const paddedId = String(product.id).padStart(4, '0');
     const paddedWeight = String(weightGrams).padStart(5, '0');
-    const weightBarcode = `20${paddedId}${paddedWeight}`;
+    const weightBarcode = `20${paddedId}${paddedWeight}0`;
 
     document.getElementById("stTitle").innerText = product.title;
     document.getElementById("stWeight").innerText = weightGrams;
@@ -121,7 +148,7 @@
     document.getElementById("stTotal").innerText = totalPrice;
     document.getElementById("pluCode").innerText = paddedId;
 
-    document.getElementById("printArea").style.display = "block";
+    document.getElementById("printArea").style.display = "flex";
     document.getElementById("scaleHelper").style.display = "block";
 
     const container = document.getElementById("barcodeContainer");
@@ -129,18 +156,13 @@
       container.innerHTML = '<svg id="barcode"></svg>';
       JsBarcode("#barcode", weightBarcode, {
         format: "CODE128",
-        width: 2,
-        height: 45,
+        width: 1.3,
+        height: 22,
+        margin: 0,
         displayValue: true,
-        fontSize: 14
+        fontSize: 9,
+        textMargin: 1
       });
-    } else {
-      let bars = '';
-      for (let i = 0; i < weightBarcode.length; i++) {
-        const w = (parseInt(weightBarcode[i]) % 3) + 1;
-        bars += `<span style="display:inline-block; width:${w}px; height:40px; background:#000; margin-right:2px;"></span>`;
-      }
-      container.innerHTML = `<div style="margin-top:5px;">${bars}</div><div style="font-family:monospace; font-size:15px; font-weight:bold; letter-spacing:2px;">${weightBarcode}</div>`;
     }
   }
 
@@ -155,6 +177,5 @@
 
   loadProducts();
 </script>
-<script src="weight-pos-addon.js"></script>
 </body>
 </html>
