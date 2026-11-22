@@ -158,6 +158,7 @@
     </div>
   </div>
   <script>
+        let quickItemCount = 0;
     const SUPABASE_URL = 'https://kuecacvhadqzywvkmauo.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
 
@@ -333,7 +334,6 @@
       document.getElementById("paidInput").value = 0;
       renderCart();
     }
-    let quickItemCount = 0;
 
     function openQuickSale() {
       document.getElementById("quickSaleModal").style.display = "flex";
