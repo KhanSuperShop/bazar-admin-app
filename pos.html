@@ -88,6 +88,24 @@
       #receiptBox { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 380px !important; margin: 0 auto; }
       .no-print { display: none !important; }
     }
+        /* থার্মাল প্রিন্টারের (58mm/80mm) জন্য পরিষ্কার কালো-সাদা স্টাইল */
+    @media print {
+      body.thermal-mode #receiptBox {
+        max-width: 280px !important;
+        padding: 4px !important;
+        color: #000 !important;
+        font-family: 'Courier New', monospace !important;
+      }
+      body.thermal-mode #receiptBox * {
+        color: #000 !important;
+        background: transparent !important;
+        border-color: #000 !important;
+      }
+      body.thermal-mode #receiptBox img,
+      body.thermal-mode #receiptBox canvas {
+        filter: contrast(200%) grayscale(100%);
+      }
+    }
   </style>
 </head>
 <body>
@@ -153,6 +171,7 @@
       <div id="receiptContent"></div>
       <div class="no-print" style="text-align:center; margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
         <button onclick="window.print()" style="background:#1976d2; color:white; border:none; padding:8px 16px; border-radius:5px; font-weight:bold; cursor:pointer; margin-right:6px;">🖨️ প্রিন্ট</button>
+       <button onclick="printThermal()" style="background:#212121; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer; margin-right:6px;">🧾 থার্মাল প্রিন্ট</button>
         <button onclick="closeReceipt()" style="background:#d32f2f; color:white; border:none; padding:8px 16px; border-radius:5px; font-weight:bold; cursor:pointer;">বন্ধ করুন</button>
       </div>
     </div>
@@ -465,6 +484,11 @@
     }
 
     function closeReceipt() { document.getElementById("receiptModal").style.display = "none"; }
+    function printThermal() {
+      document.body.classList.add("thermal-mode");
+      window.print();
+      setTimeout(() => document.body.classList.remove("thermal-mode"), 500);
+    }
     function saveOfflineSale(orderData) {
       pendingSales.push(orderData);
       localStorage.setItem('pos_pending_sales', JSON.stringify(pendingSales));
