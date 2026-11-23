@@ -14,6 +14,7 @@
     document.body.prepend(banner);
 
     let knownCancelledIds = JSON.parse(localStorage.getItem('seen_cancelled_orders') || '[]');
+    let beepPlayedIds = [];
 
     // ২. Supabase থেকে বাতিল হওয়া অর্ডার চেক করা
     async function checkCancelledOrders() {
@@ -27,21 +28,34 @@
                 return;
             }
 
-            // নতুন কোনো অর্ডার বাতিল হয়েছে কি না চেক করা
-            const newCancels = cancelledOrders.filter(o => !knownCancelledIds.includes(o.id));
-            if (newCancels.length > 0) {
-                playAlertBeep();
+            // টেবিলে বাতিল অর্ডারগুলো হাইলাইট করা
+            highlightCancelledRows(cancelledOrders);
+
+            // যেগুলো এখনো দেখা হয়নি (Unseen) শুধু সেগুলো ফিল্টার করা
+            const unseenCancels = cancelledOrders.filter(o => !knownCancelledIds.includes(o.id));
+
+            // সব বাতিল অর্ডার দেখা হয়ে গেলে ব্যানার বন্ধ রাখা
+            if (unseenCancels.length === 0) {
+                banner.style.display = 'none';
+                return;
             }
 
-            // উপরের নোটিফিকেশন ব্যানার আপডেট করা
-            const latest = cancelledOrders;
+            // একদম নতুন অর্ডারের জন্য একবারই শব্দ বাজানো
+            const brandNew = unseenCancels.filter(o => !beepPlayedIds.includes(o.id));
+            if (brandNew.length > 0) {
+                playAlertBeep();
+                brandNew.forEach(o => beepPlayedIds.push(o.id));
+            }
+
+            // সর্বশেষ না দেখা বাতিল অর্ডারটি নেওয়া
+            const latest = unseenCancels.at(0);
             banner.style.display = 'block';
             banner.innerHTML = `
                 <div style="max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <div style="font-size:14px; line-height:1.5;">
-                        <strong>🚨 অর্ডার বাতিলের নোটিফিকেশন:</strong> মোট <strong>${cancelledOrders.length}টি</strong> অর্ডার কাস্টমার বাতিল করেছেন। 
+                        <strong>🚨 অর্ডার বাতিলের নোটিফিকেশন:</strong> নতুন <strong>${unseenCancels.length}টি</strong> অর্ডার কাস্টমার বাতিল করেছেন। 
                         <span style="background:rgba(0,0,0,0.25); padding:2px 8px; border-radius:4px; margin-left:5px;">
-                            সর্বশেষ: অর্ডার #${latest.id} (${latest.customer_name || 'গ্রাহক'} - ৳${latest.total_amount})
+                            সর্বশেষ: অর্ডার #${latest.id} (${latest.customer_name || 'গ্রাহক'} - ৳${latest.total_amount || 0})
                         </span>
                     </div>
                     <button id="dismiss-cancel-banner" style="background:#fff; color:#d32f2f; border:none; padding:5px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:12px;">
@@ -55,9 +69,6 @@
                 localStorage.setItem('seen_cancelled_orders', JSON.stringify(knownCancelledIds));
                 banner.style.display = 'none';
             };
-
-            // ৩. অ্যাডমিন প্যানেলের টেবিলে বাতিল অর্ডারগুলো লাল রঙ ও ব্যাজ দিয়ে চিহ্নিত করা
-            highlightCancelledRows(cancelledOrders);
         } catch (err) {
             console.error('Cancel check error:', err);
         }
@@ -68,7 +79,6 @@
         rows.forEach(tr => {
             const rowText = tr.innerText;
             cancelledOrders.forEach(order => {
-                // অর্ডার আইডি বা ঠিকানা+বিল মিলে গেলে রো-টি হাইলাইট করবে
                 const matchById = new RegExp(`(^|\\s|#)${order.id}(\\s|$)`).test(rowText);
                 const matchByDetails = order.delivery_address && rowText.includes(order.delivery_address) && rowText.includes(String(order.total_amount));
 
@@ -77,7 +87,6 @@
                     tr.style.backgroundColor = '#ffebee';
                     tr.style.color = '#b71c1c';
 
-                    // অ্যাকশন কলামের 'সম্পন্ন' বাটন লুকিয়ে বাতিল ব্যাজ বসানো
                     const buttons = tr.querySelectorAll('button');
                     buttons.forEach(btn => {
                         if (btn.innerText.includes('সম্পন্ন')) {
@@ -109,7 +118,6 @@
         } catch (e) {}
     }
 
-    // পেজ লোড হলে এবং প্রতি ৫ সেকেন্ড পরপর অটোমেটিক চেক করবে
     setTimeout(checkCancelledOrders, 1000);
     setInterval(checkCancelledOrders, 5000);
 })();
