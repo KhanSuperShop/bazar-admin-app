@@ -56,8 +56,8 @@
   function findProductListCard() {
     var headings = document.querySelectorAll("h2");
     for (var i = 0; i < headings.length; i++) {
-      if (headings.item(i).innerText.includes("সকল পণ্যের তালিকা")) {
-        return headings.at(i).closest("div[style*='background-color: #fff'], div[style*='background-color:#fff'], div");
+            if (headings.item(i).innerText.includes("সকল পণ্যের তালিকা")) {
+        return headings.item(i).closest("div[style*='background-color: #fff'], div[style*='background-color:#fff'], div");
       }
     }
     return null;
