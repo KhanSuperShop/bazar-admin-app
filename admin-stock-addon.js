@@ -1,9 +1,31 @@
 (function() {
-  const SUPABASE_URL = 'https://kuecacvhadqzywvkmauo.supabase.co'; 
- const SUPABASE_ANON_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
+  const ADDON_SB_URL = 'https://kuecacvhadqzywvkmauo.supabase.co;
+  const ADDON_SB_KEY = 'sb_publishable_ijrPXf2ssOl-5usaMmSNgw_VNpkJkpI';
   let addonProducts = [];
 
-  window.addEventListener("DOMContentLoaded", () => {
+  async function loadAddonProducts() {
+    const selectEl = document.getElementById("addon_edit_select");
+    try {
+      const res = await fetch(`${ADDON_SB_URL}/rest/v1/products?select=id,title,price,stock&order=title.asc`, {
+        headers: {
+          'apikey': ADDON_SB_KEY,
+          'Authorization': 'Bearer ' + ADDON_SB_KEY
+        }
+      });
+      if (!res.ok) throw new Error("Load failed");
+      addonProducts = await res.json();
+      if (selectEl) {
+        selectEl.innerHTML = '<option value="">-- পণ্য বাছাই করুন --</option>';
+        addonProducts.forEach(p => {
+          selectEl.innerHTML += `<option value="${p.id}">${p.title} (৳${p.price} | স্টক: ${p.stock ?? 'N/A'})</option>`;
+        });
+      }
+    } catch (e) {
+      if (selectEl) selectEl.innerHTML = '<option value="">পণ্য লোড হয়নি, রিফ্রেশ করুন</option>';
+    }
+  }
+
+  function initAddon() {
     const priceInput = document.getElementById("price");
     const form = document.getElementById("productForm");
     if (!priceInput || !form) return;
@@ -51,20 +73,21 @@
               document.getElementById("addon_stock").value = "";
               loadAddonProducts();
             }
-          } catch (e) {
-            console.error("স্টক সেভ এরর:", e);
-          }
+          } catch (e) {}
         }, 2500);
       }
     });
 
-    // ২. পুরনো পণ্যের দাম ও স্টক একসাথে পরিবর্তনের আলাদা কার্ড তৈরি
+    // ২. পুরনো পণ্যের দাম ও স্টক একসাথে পরিবর্তনের কার্ড
     const parentCard = form.closest("div");
     if (parentCard) {
       const quickEditCard = document.createElement("div");
       quickEditCard.style.cssText = "background-color:#fff; padding:20px; border-radius:8px; border:1px solid #ddd;";
       quickEditCard.innerHTML = `
-        <h2 style="margin-top:0; color:#333; border-bottom:2px solid #ff9800; padding-bottom:10px; font-size:20px;">⚡ দ্রুত দাম ও স্টক পরিবর্তন</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ff9800; padding-bottom:10px; margin-bottom:12px;">
+          <h2 style="margin:0; color:#333; font-size:20px;">⚡ দ্রুত দাম ও স্টক পরিবর্তন</h2>
+          <button type="button" id="addon_reload_btn" style="background:#eee; border:1px solid #ccc; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🔄</button>
+        </div>
         <label>পণ্য নির্বাচন করুন</label>
         <select id="addon_edit_select" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:5px; font-size:14px;">
           <option value="">লোড হচ্ছে...</option>
@@ -82,6 +105,8 @@
         <button type="button" id="addon_save_btn" style="width:100%; background:#ff9800; color:#fff; border:none; padding:12px; border-radius:5px; font-size:15px; font-weight:bold; cursor:pointer;">✔ দাম ও স্টক আপডেট করুন</button>
       `;
       parentCard.insertAdjacentElement("afterend", quickEditCard);
+
+      document.getElementById("addon_reload_btn").addEventListener("click", loadAddonProducts);
 
       const selectEl = document.getElementById("addon_edit_select");
       selectEl.addEventListener("change", () => {
@@ -140,25 +165,11 @@
 
       loadAddonProducts();
     }
-  });
+  }
 
-  async function loadAddonProducts() {
-    try {
-      const headers = {
-        'apikey': ADDON_SB_KEY,
-        'Authorization': 'Bearer ' + ADDON_SB_KEY
-      };
-      const res = await fetch(`${ADDON_SB_URL}/rest/v1/products?select=id,title,price,stock&order=title.asc`, { headers });
-      addonProducts = await res.json();
-      const selectEl = document.getElementById("addon_edit_select");
-      if (selectEl) {
-        selectEl.innerHTML = '<option value="">-- পণ্য বাছাই করুন --</option>';
-        addonProducts.forEach(p => {
-          selectEl.innerHTML += `<option value="${p.id}">${p.title} (৳${p.price} | স্টক: ${p.stock ?? 'N/A'})</option>`;
-        });
-      }
-    } catch (e) {
-      console.error("পণ্য লোড এরর:", e);
-    }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAddon);
+  } else {
+    initAddon();
   }
 })();
