@@ -283,10 +283,9 @@
     }
   }
 
-  if (document.readyState === "loading") {
+    if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initAddon);
   } else {
     initAddon();
   }
 })();
-
