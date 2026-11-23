@@ -36,25 +36,30 @@
       rows.forEach(function(tr) {
         var cells = tr.querySelectorAll("td");
         if (cells.length >= 3) {
-          if (cells.length >= 3) {
-          var titleText = cells.item(1) ? cells.item(1).innerText.trim() : "";
+          var cell1 = cells.item(1);
+          var titleText = cell1 ? cell1.innerText.trim() : "";
           var prod = addonProducts.find(function(item) { return item.title && titleText.includes(item.title.trim()); });
-          if (prod && cells.item(1)) {
-            var oldBadge = cells.item(1).querySelector(".addon-stock-badge");
+          if (prod && cell1) {
+            var oldBadge = cell1.querySelector(".addon-stock-badge");
             if (oldBadge) oldBadge.remove();
             var stVal = (prod.stock !== null && prod.stock !== undefined) ? prod.stock : "আনলিমিটেড";
             var badge = document.createElement("div");
             badge.className = "addon-stock-badge";
             badge.style.cssText = "font-size:12px; color:#0066cc; font-weight:bold; margin-top:3px;";
             badge.innerText = "📦 স্টক: " + stVal;
-            cells.item(1).appendChild(badge);
+            cell1.appendChild(badge);
           }
         }
+      });
+    });
+  }
+
   function findProductListCard() {
     var headings = document.querySelectorAll("h2");
     for (var i = 0; i < headings.length; i++) {
-            if (headings.item(i).innerText.includes("সকল পণ্যের তালিকা")) {
-        return headings.item(i).closest("div[style*='background-color: #fff'], div[style*='background-color:#fff'], div");
+      var h = headings.item(i);
+      if (h && h.innerText.includes("সকল পণ্যের তালিকা")) {
+        return h.closest("div[style*='background-color: #fff'], div[style*='background-color:#fff'], div");
       }
     }
     return null;
@@ -201,7 +206,6 @@
           discountEl.value = "";
         }
         updatePreview();
-      });
       selectEl.addEventListener("change", function() {
         var p = addonProducts.find(function(item) { return item.id == selectEl.value; });
         if (p) {
@@ -283,7 +287,7 @@
     }
   }
 
-    if (document.readyState === "loading") {
+  if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initAddon);
   } else {
     initAddon();
