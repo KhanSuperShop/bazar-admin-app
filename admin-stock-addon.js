@@ -15,20 +15,19 @@
       if (!res.ok) throw new Error("Load failed");
       addonProducts = await res.json();
       if (selectEl) {
-        selectEl.innerHTML = '<option value="">-- পণ্য বাছাই করুন --</option>';
+        selectEl.innerHTML = "<option value=''>-- পণ্য বাছাই করুন --</option>";
         addonProducts.forEach(function(p) {
           var st = (p.stock !== null && p.stock !== undefined) ? p.stock : "N/A";
           var oldTxt = (p.old_price && p.old_price > p.price) ? " | আগের: ৳" + p.old_price : "";
-          selectEl.innerHTML += '<option value="' + p.id + '">' + p.title + ' (৳' + p.price + oldTxt + ' | স্টক: ' + st + ')</option>';
+          selectEl.innerHTML += "<option value='" + p.id + "'>" + p.title + " (৳" + p.price + oldTxt + " | স্টক: " + st + ")</option>";
         });
       }
       enhanceProductTableRows();
     } catch (e) {
-      if (selectEl) selectEl.innerHTML = '<option value="">পণ্য লোড হয়নি, রিফ্রেশ করুন</option>';
+      if (selectEl) selectEl.innerHTML = "<option value=''>পণ্য লোড হয়নি, রিফ্রেশ করুন</option>";
     }
   }
 
-  // নিচের সকল পণ্যের তালিকায় লাইভ স্টক ব্যাজ দেখানো
   function enhanceProductTableRows() {
     var tables = document.querySelectorAll("table");
     tables.forEach(function(tbl) {
@@ -57,8 +56,8 @@
   function findProductListCard() {
     var headings = document.querySelectorAll("h2");
     for (var i = 0; i < headings.length; i++) {
-      if (headings[i].innerText.includes("সকল পণ্যের তালিকা")) {
-        return headings[i].closest("div[style*='background-color: #fff'], div[style*='background-color:#fff'], div");
+      if (headings.at(i).innerText.includes("সকল পণ্যের তালিকা")) {
+        return headings.at(i).closest("div[style*='background-color: #fff'], div[style*='background-color:#fff'], div");
       }
     }
     return null;
@@ -68,7 +67,6 @@
     var priceInput = document.getElementById("price");
     var form = document.getElementById("productForm");
 
-    // ১. নতুন পণ্য যোগ করার ফর্মে স্টক ইনপুট ঘর যোগ করা
     if (priceInput && form) {
       var label = document.createElement("label");
       label.innerText = "স্টক পরিমাণ (কেজি বা পিস)";
@@ -120,7 +118,6 @@
       });
     }
 
-    // ২. "সকল পণ্যের তালিকা (এডিট / ডিলিট)" এর ঠিক ওপরে একসাথে দাম, ছাড় (%), কাটা দাম ও স্টক বক্স বসানো
     var listCard = findProductListCard();
     var targetContainer = listCard ? listCard.parentElement : (form ? form.closest("div") : null);
 
@@ -128,34 +125,34 @@
       var quickEditCard = document.createElement("div");
       quickEditCard.style.cssText = "background-color:#fff; padding:20px; border-radius:8px; border:2px solid #ff9800; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.06);";
       quickEditCard.innerHTML = 
-        '<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ff9800; padding-bottom:10px; margin-bottom:12px;">' +
-          '<h2 style="margin:0; color:#333; font-size:19px;">⚡ দ্রুত দাম, ছাড় (%) ও স্টক আপডেট (একসাথে)</h2>' +
-          '<button type="button" id="addon_reload_btn" style="background:#eee; border:1px solid #ccc; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;">🔄 রিফ্রেশ</button>' +
-        '</div>' +
-        '<label>১. পণ্য নির্বাচন করুন</label>' +
-        '<select id="addon_edit_select" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:5px; font-size:14px; font-weight:bold;">' +
-          '<option value="">লোড হচ্ছে...</option>' +
-        '</select>' +
-        '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
-          '<div style="flex:1; min-width:110px;">' +
-            '<label>আগের দাম (কাটা ৳)</label>' +
-            '<input type="number" step="any" id="addon_edit_old_price" placeholder="যেমন: 100" style="width:100%; padding:10px;">' +
-          '</div>' +
-          '<div style="flex:1; min-width:110px;">' +
-            '<label>ছাড় দিন (%)</label>' +
-            '<input type="number" step="any" id="addon_edit_discount" placeholder="যেমন: 10 বা 20" style="width:100%; padding:10px; background:#fff8e1;">' +
-          '</div>' +
-          '<div style="flex:1; min-width:110px;">' +
-            '<label>নতুন দাম (৳) *</label>' +
-            '<input type="number" step="any" id="addon_edit_price" placeholder="নতুন দাম" style="width:100%; padding:10px; font-weight:bold; color:#28a745;">' +
-          '</div>' +
-          '<div style="flex:1; min-width:110px;">' +
-            '<label>নতুন স্টক (কেজি/পিস)</label>' +
-            '<input type="number" step="any" id="addon_edit_stock" placeholder="স্টক" style="width:100%; padding:10px;">' +
-          '</div>' +
-        '</div>' +
-        '<div id="addon_preview_line" style="font-size:13px; color:#d32f2f; font-weight:bold; margin-bottom:10px; min-height:18px;"></div>' +
-        '<button type="button" id="addon_save_btn" style="width:100%; background:#ff9800; color:#fff; border:none; padding:12px; border-radius:5px; font-size:15px; font-weight:bold; cursor:pointer;">✔ দাম, ছাড় ও স্টক আপডেট করুন</button>';
+        "<div style='display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ff9800; padding-bottom:10px; margin-bottom:12px;'>" +
+          "<h2 style='margin:0; color:#333; font-size:19px;'>⚡ দ্রুত দাম, ছাড় (%) ও স্টক আপডেট (একসাথে)</h2>" +
+          "<button type='button' id='addon_reload_btn' style='background:#eee; border:1px solid #ccc; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:bold;'>🔄 রিফ্রেশ</button>" +
+        "</div>" +
+        "<label>১. পণ্য নির্বাচন করুন</label>" +
+        "<select id='addon_edit_select' style='width:100%; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:5px; font-size:14px; font-weight:bold;'>" +
+          "<option value=''>লোড হচ্ছে...</option>" +
+        "</select>" +
+        "<div style='display:flex; gap:10px; flex-wrap:wrap;'>" +
+          "<div style='flex:1; min-width:110px;'>" +
+            "<label>আগের দাম (কাটা ৳)</label>" +
+            "<input type='number' step='any' id='addon_edit_old_price' placeholder='যেমন: 100' style='width:100%; padding:10px;'>" +
+          "</div>" +
+          "<div style='flex:1; min-width:110px;'>" +
+            "<label>ছাড় দিন (%)</label>" +
+            "<input type='number' step='any' id='addon_edit_discount' placeholder='যেমন: 10 বা 20' style='width:100%; padding:10px; background:#fff8e1;'>" +
+          "</div>" +
+          "<div style='flex:1; min-width:110px;'>" +
+            "<label>নতুন দাম (৳) *</label>" +
+            "<input type='number' step='any' id='addon_edit_price' placeholder='নতুন দাম' style='width:100%; padding:10px; font-weight:bold; color:#28a745;'>" +
+          "</div>" +
+          "<div style='flex:1; min-width:110px;'>" +
+            "<label>নতুন স্টক (কেজি/পিস)</label>" +
+            "<input type='number' step='any' id='addon_edit_stock' placeholder='স্টক' style='width:100%; padding:10px;'>" +
+          "</div>" +
+        "</div>" +
+        "<div id='addon_preview_line' style='font-size:13px; color:#d32f2f; font-weight:bold; margin-bottom:10px; min-height:18px;'></div>" +
+        "<button type='button' id='addon_save_btn' style='width:100%; background:#ff9800; color:#fff; border:none; padding:12px; border-radius:5px; font-size:15px; font-weight:bold; cursor:pointer;'>✔ দাম, ছাড় ও স্টক আপডেট করুন</button>";
       
       if (listCard) {
         listCard.insertAdjacentElement("beforebegin", quickEditCard);
@@ -175,15 +172,14 @@
         var np = Number(newPriceEl.value) || 0;
         if (op > np && np > 0) {
           var pct = Math.round(((op - np) / op) * 100);
-          previewEl.innerHTML = 'প্রিভিউ: <span style="text-decoration:line-through; color:#888;">৳' + op + '</span> → <span style="color:#28a745; font-size:15px;">৳' + np + '</span> <span style="background:#ffebee; color:#d32f2f; padding:2px 6px; border-radius:4px;">-' + pct + '% ছাড়</span>';
+          previewEl.innerHTML = "প্রিভিউ: <span style='text-decoration:line-through; color:#888;'>৳" + op + "</span> → <span style='color:#28a745; font-size:15px;'>৳" + np + "</span> <span style='background:#ffebee; color:#d32f2f; padding:2px 6px; border-radius:4px;'>-" + pct + "% ছাড়</span>";
         } else if (np > 0) {
-          previewEl.innerHTML = 'প্রিভিউ: বর্তমান বিক্রয় মূল্য <span style="color:#28a745; font-size:15px;">৳' + np + '</span> (কোনো ছাড় নেই)';
+          previewEl.innerHTML = "প্রিভিউ: বর্তমান বিক্রয় মূল্য <span style='color:#28a745; font-size:15px;'>৳" + np + "</span> (কোনো ছাড় নেই)";
         } else {
           previewEl.innerHTML = "";
         }
       }
 
-      // ছাড় (%) লিখলে অটোমেটিক নতুন দাম হিসাব হওয়া
       discountEl.addEventListener("input", function() {
         var disc = Number(discountEl.value);
         var basePrice = Number(oldPriceEl.value) || Number(newPriceEl.value);
@@ -200,7 +196,6 @@
 
       oldPriceEl.addEventListener("input", updatePreview);
       newPriceEl.addEventListener("input", function() {
-      newPriceEl.addEventListener("input", function() {
         var op = Number(oldPriceEl.value) || 0;
         var np = Number(newPriceEl.value) || 0;
         if (op > np && np > 0) {
@@ -210,7 +205,6 @@
         }
         updatePreview();
       });
-
       selectEl.addEventListener("change", function() {
         var p = addonProducts.find(function(item) { return item.id == selectEl.value; });
         if (p) {
@@ -298,3 +292,4 @@
     initAddon();
   }
 })();
+
