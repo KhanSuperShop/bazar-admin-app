@@ -36,23 +36,20 @@
       rows.forEach(function(tr) {
         var cells = tr.querySelectorAll("td");
         if (cells.length >= 3) {
-          var titleText = cells.at(1) ? cells.at(1).innerText.trim() : "";
+          if (cells.length >= 3) {
+          var titleText = cells.item(1) ? cells.item(1).innerText.trim() : "";
           var prod = addonProducts.find(function(item) { return item.title && titleText.includes(item.title.trim()); });
-          if (prod && cells.at(1)) {
-            var oldBadge = cells.at(1).querySelector(".addon-stock-badge");
+          if (prod && cells.item(1)) {
+            var oldBadge = cells.item(1).querySelector(".addon-stock-badge");
             if (oldBadge) oldBadge.remove();
             var stVal = (prod.stock !== null && prod.stock !== undefined) ? prod.stock : "আনলিমিটেড";
             var badge = document.createElement("div");
             badge.className = "addon-stock-badge";
             badge.style.cssText = "font-size:12px; color:#0066cc; font-weight:bold; margin-top:3px;";
             badge.innerText = "📦 স্টক: " + stVal;
-            cells.at(1).appendChild(badge);
+            cells.item(1).appendChild(badge);
           }
         }
-      });
-    });
-  }
-
   function findProductListCard() {
     var headings = document.querySelectorAll("h2");
     for (var i = 0; i < headings.length; i++) {
