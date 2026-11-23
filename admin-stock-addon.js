@@ -38,8 +38,12 @@
     var done = getDoneList(), pCnt = 0, cCnt = 0;
 
     tbl.querySelectorAll("tbody tr").forEach(function(tr) {
-      var key = tr.innerText.replace(/✓ সম্পন্ন|প্রিন্ট|✅ সম্পন্ন/g, "").trim().substring(0, 80);
-      var isDone = done.includes(key) || tr.dataset.isCompleted === "true";
+      var rawText = tr.innerText;
+      var key = rawText.replace(/✓ সম্পন্ন|প্রিন্ট|✅ সম্পন্ন/g, "").trim().substring(0, 80);
+      
+      // সরাসরি ক্রেতা বা POS Counter অর্ডার হলে অটোমেটিক সম্পন্ন হিসেবে ধরা
+      var isDirectPOS = rawText.includes("সরাসরি ক্রেতা") || rawText.includes("POS Counter");
+      var isDone = isDirectPOS || done.includes(key) || tr.dataset.isCompleted === "true";
 
       if (isDone) {
         cCnt++;
@@ -51,7 +55,7 @@
           });
           var sp = document.createElement("span");
           sp.className = "addon-done-tag";
-          sp.innerText = "✅ সম্পন্ন";
+          sp.innerText = isDirectPOS ? "✅ POS সম্পন্ন" : "✅ সম্পন্ন";
           sp.style.cssText = "display:inline-block;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:bold;margin-top:4px;";
           act.appendChild(sp);
         }
